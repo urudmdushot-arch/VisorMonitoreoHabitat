@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sistema de Monitoreo de Licencias | DMQ</title>
+  <meta name="description" content="Plataforma interactiva de monitoreo y seguimiento del flujo de licenciamiento urbano (Entidades Colaboradoras -> Administraciones Zonales -> AMC) en el Distrito Metropolitano de Quito.">
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Mapbox GL JS -->
+  <link href="https://api.mapbox.com/mapbox-gl-js/v3.2.0/mapbox-gl.css" rel="stylesheet">
+  <script src="https://api.mapbox.com/mapbox-gl-js/v3.2.0/mapbox-gl.js"></script>
+  
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+  
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  
+  <!-- Styles -->
+  <link rel="stylesheet" href="index.css">
+</head>
+<body class="dark-theme">
+  <!-- Top App Navigation -->
+  <header class="app-header" id="app-header">
+    <div class="header-brand">
+      <div class="brand-icon">
+        <i data-lucide="layers"></i>
+      </div>
+      <div class="brand-text">
+        <h1>Monitoreo de Licencias Urbanas <span>DMQ</span></h1>
+        <p>Flujo: Entidades Colaboradoras &rarr; Administraciones Zonales &rarr; AMC</p>
+      </div>
+    </div>
+
+    <!-- Quick Predio Search -->
+    <div class="header-search">
+      <div class="search-input-wrapper">
+        <i data-lucide="search" class="search-icon"></i>
+        <input type="text" id="global-search-input" placeholder="Buscar por N° de predio, proyecto o propietario..." autocomplete="off">
+        <button id="clear-search-btn" class="clear-search-btn hidden" title="Limpiar búsqueda">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+      <div id="search-autocomplete-dropdown" class="search-autocomplete-dropdown hidden"></div>
+    </div>
+
+    <!-- Header Actions -->
+    <div class="header-actions">
+      <div class="live-badge" title="Dataset consolidado de Quito">
+        <span class="pulsing-dot"></span>
+        <span id="badge-total-count">Cargando predios...</span>
+      </div>
+      <button id="toggle-theme-btn" class="icon-btn" title="Cambiar tema de mapa">
+        <i data-lucide="map"></i>
+      </button>
+      <button id="export-csv-btn" class="btn btn-secondary" title="Exportar vista filtrada a CSV">
+        <i data-lucide="download"></i>
+        <span>Exportar CSV</span>
+      </button>
+      <button id="toggle-table-view-btn" class="btn btn-primary" title="Ver tabla de datos detallada">
+        <i data-lucide="table"></i>
+        <span>Ver Tabla</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- KPI Executive Metrics Bar -->
+  <section class="kpi-banner" id="kpi-banner">
+    <div class="kpi-card" id="kpi-total">
+      <div class="kpi-icon-wrap blue">
+        <i data-lucide="building-2"></i>
+      </div>
+      <div class="kpi-content">
+        <div class="kpi-label">Total Proyectos</div>
+        <div class="kpi-value" id="kpi-val-total">5,886</div>
+        <div class="kpi-sub" id="kpi-sub-total">LMU 10 y LMU 20</div>
+      </div>
+    </div>
+
+    <div class="kpi-card" id="kpi-fase1">
+      <div class="kpi-icon-wrap cyan">
+        <i data-lucide="clipboard-check"></i>
+      </div>
+      <div class="kpi-content">
+        <div class="kpi-label">Fase 1: Entidades Colab.</div>
+        <div class="kpi-value" id="kpi-val-fase1">4,691</div>
+        <div class="kpi-sub highlight-amber" id="kpi-sub-fase1">1,535 se quedaron (32.7%)</div>
+      </div>
+    </div>
+
+    <div class="kpi-card" id="kpi-fase2">
+      <div class="kpi-icon-wrap amber">
+        <i data-lucide="landmark"></i>
+      </div>
+      <div class="kpi-content">
+        <div class="kpi-label">Fase 2: Admin. Zonales</div>
+        <div class="kpi-value" id="kpi-val-fase2">4,068</div>
+        <div class="kpi-sub highlight-green" id="kpi-sub-fase2">67.1% tasa de avance a AZ</div>
+      </div>
+    </div>
+
+    <div class="kpi-card" id="kpi-fase3">
+      <div class="kpi-icon-wrap green">
+        <i data-lucide="shield-check"></i>
+      </div>
+      <div class="kpi-content">
+        <div class="kpi-label">Fase 3: AMC Certificados</div>
+        <div class="kpi-value" id="kpi-val-fase3">401</div>
+        <div class="kpi-sub" id="kpi-sub-fase3">84 ciclo completo trazado</div>
+      </div>
+    </div>
+
+    <div class="kpi-card" id="kpi-tiempos">
+      <div class="kpi-icon-wrap purple">
+        <i data-lucide="clock"></i>
+      </div>
+      <div class="kpi-content">
+        <div class="kpi-label">Tiempo Transición (EC &rarr; AZ)</div>
+        <div class="kpi-value" id="kpi-val-tiempo">204 <small>días</small></div>
+        <div class="kpi-sub" id="kpi-sub-tiempo">Mediana: 172 d &bull; Trámite AZ: 17.7 d</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Filter & Control Toolbar -->
+  <nav class="filter-toolbar" id="filter-toolbar">
+    <!-- License Type Filter -->
+    <div class="toolbar-group">
+      <span class="toolbar-label">Tipo Licencia:</span>
+      <div class="pill-group" id="pill-licencia">
+        <button class="pill-btn active" data-filter="all">Todas</button>
+        <button class="pill-btn" data-filter="LMU 20">LMU 20 (Edificaciones)</button>
+        <button class="pill-btn" data-filter="LMU 10">LMU 10 (Suelo)</button>
+      </div>
+    </div>
+
+    <div class="toolbar-divider"></div>
+
+    <!-- Flow Phase Filter -->
+    <div class="toolbar-group">
+      <span class="toolbar-label">Fase del Flujo:</span>
+      <div class="pill-group" id="pill-fase">
+        <button class="pill-btn active" data-fase="all">Todas</button>
+        <button class="pill-btn phase-1-btn" data-fase="1" title="Solo con registro en Entidad Colaboradora">
+          <span class="phase-dot c-phase1"></span> Fase 1 (EC)
+        </button>
+        <button class="pill-btn phase-2-btn" data-fase="2" title="Con trámite ingresado o emitido en Administración Zonal">
+          <span class="phase-dot c-phase2"></span> Fase 2 (AZ)
+        </button>
+        <button class="pill-btn phase-3-btn" data-fase="3" title="Con certificado de conformidad final de AMC">
+          <span class="phase-dot c-phase3"></span> Fase 3 (AMC)
+        </button>
+        <button class="pill-btn funnel-btn" data-fase="funnel" title="Predios con ciclo completo de punta a punta">
+          <i data-lucide="git-commit"></i> Ciclo Completo (84)
+        </button>
+      </div>
+    </div>
+
+    <div class="toolbar-divider"></div>
+
+    <!-- Dropdowns: Zonal, Entidad, Año -->
+    <div class="toolbar-dropdowns">
+      <div class="custom-select-wrap">
+        <select id="select-zonal" aria-label="Filtrar por Administración Zonal">
+          <option value="all">Todas las Adm. Zonales</option>
+          <option value="Administración Zonal Tumbaco">AZ Tumbaco (32.5%)</option>
+          <option value="Administración Zonal Los Chillos">AZ Los Chillos (13.3%)</option>
+          <option value="Administración Zonal Quitumbe">AZ Quitumbe (12.6%)</option>
+          <option value="Administración Zonal Norte">AZ Norte (Eugenio Espejo) (11.6%)</option>
+          <option value="Administración Zonal Calderón">AZ Calderón (9.9%)</option>
+          <option value="Administración Zonal La Delicia">AZ La Delicia (9.6%)</option>
+          <option value="Administración Zonal Sur">AZ Sur (Eloy Alfaro) (6.7%)</option>
+          <option value="Administración Zonal Centro">AZ Centro (Manuela Sáenz) (3.0%)</option>
+          <option value="Administración Zonal La Mariscal">AZ La Mariscal (0.6%)</option>
+          <option value="Administración Zonal Chocó Andino">AZ Chocó Andino (0.2%)</option>
+        </select>
+      </div>
+
+      <div class="custom-select-wrap">
+        <select id="select-entidad" aria-label="Filtrar por Entidad Colaboradora">
+          <option value="all">Todas las Entidades Colab.</option>
+          <option value="Colegio de Arquitectos">Colegio de Arquitectos (68.6%)</option>
+          <option value="Desintecsa">Desintecsa (31.4%)</option>
+        </select>
+      </div>
+
+      <div class="custom-select-wrap">
+        <select id="select-anio" aria-label="Filtrar por Año">
+          <option value="all">Todos los Años (2023 - 2026)</option>
+          <option value="2026">Año 2026</option>
+          <option value="2025">Año 2025</option>
+          <option value="2024">Año 2024</option>
+          <option value="2023">Año 2023</option>
+        </select>
+      </div>
+
+      <button id="reset-filters-btn" class="btn btn-ghost" title="Restablecer todos los filtros">
+        <i data-lucide="rotate-ccw"></i>
+        <span>Restablecer</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Main Grid Workspace: Map + Analytics Side Panel -->
+  <main class="main-workspace" id="main-workspace">
+    <!-- Map Container -->
+    <div class="map-section" id="map-section">
+      <div id="mapbox-container"></div>
+      
+      <!-- Map Floating Controls & Legend -->
+      <div class="map-legend-card" id="map-legend-card">
+        <div class="legend-header">
+          <h4>Fases de Monitoreo</h4>
+          <span class="legend-subtitle" id="legend-count-label">5,886 en mapa</span>
+        </div>
+        <div class="legend-items">
+          <div class="legend-item" data-filter-fase="1">
+            <span class="legend-dot c-phase1"></span>
+            <span class="legend-name">Fase 1: Entidades Colab.</span>
+            <span class="legend-badge" id="leg-count-f1">1,535</span>
+          </div>
+          <div class="legend-item" data-filter-fase="2">
+            <span class="legend-dot c-phase2"></span>
+            <span class="legend-name">Fase 2: Admin. Zonal</span>
+            <span class="legend-badge" id="leg-count-f2">3,950</span>
+          </div>
+          <div class="legend-item" data-filter-fase="3">
+            <span class="legend-dot c-phase3"></span>
+            <span class="legend-name">Fase 3: AMC Certificado</span>
+            <span class="legend-badge" id="leg-count-f3">401</span>
+          </div>
+        </div>
+        <div class="legend-footer">
+          <small><i data-lucide="info"></i> Clic en cualquier punto para ver ficha técnica</small>
+        </div>
+      </div>
+
+      <!-- Map Style Selector Overlay -->
+      <div class="map-style-selector" id="map-style-selector">
+        <button class="map-style-btn active" data-style="mapbox://styles/mapbox/dark-v11">Oscuro</button>
+        <button class="map-style-btn" data-style="mapbox://styles/mapbox/satellite-streets-v12">Satélite</button>
+        <button class="map-style-btn" data-style="mapbox://styles/mapbox/streets-v12">Calles</button>
+        <button class="map-style-btn" data-style="mapbox://styles/mapbox/navigation-night-v1">Navegación</button>
+      </div>
+
+      <!-- Map Loading Spinner -->
+      <div id="map-loader" class="map-loader">
+        <div class="spinner"></div>
+        <p>Cargando geometrías y predios de Quito...</p>
+      </div>
+    </div>
+
+    <!-- Analytics & Charts Drawer / Sidebar -->
+    <aside class="analytics-sidebar" id="analytics-sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-title">
+          <i data-lucide="bar-chart-3"></i>
+          <h3>Métricas & Flujo Dinámico</h3>
+        </div>
+        <button id="toggle-sidebar-btn" class="icon-btn" title="Minimizar panel">
+          <i data-lucide="chevron-right"></i>
+        </button>
+      </div>
+
+      <div class="sidebar-scrollable-content">
+        <!-- Chart 1: Funnel / Flow Transitions -->
+        <div class="chart-box">
+          <div class="chart-header">
+            <h4>Flujo de Transición por Fase</h4>
+            <span class="chart-tag">Embudo Dinámico</span>
+          </div>
+          <p class="chart-desc">Comparativa de proyectos que ingresaron, avanzaron a la siguiente fase o se quedaron detenidos.</p>
+          <div class="chart-wrapper">
+            <canvas id="chart-funnel"></canvas>
+          </div>
+          <div class="funnel-stats-grid">
+            <div class="f-stat">
+              <span class="f-lbl">Tasa Avance EC &rarr; AZ:</span>
+              <span class="f-val green" id="stat-tasa-az">67.1%</span>
+            </div>
+            <div class="f-stat">
+              <span class="f-lbl">Tasa Avance AZ &rarr; AMC:</span>
+              <span class="f-val amber" id="stat-tasa-amc">2.9%</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Chart 2: Annual Emissions -->
+        <div class="chart-box">
+          <div class="chart-header">
+            <h4>Emisiones por Año (2023 - 2026)</h4>
+            <span class="chart-tag">Temporal</span>
+          </div>
+          <p class="chart-desc">Evolución de licencias y certificados emitidos en cada fase por año.</p>
+          <div class="chart-wrapper">
+            <canvas id="chart-years"></canvas>
+          </div>
+        </div>
+
+        <!-- Chart 3: Zonal Administration Participation -->
+        <div class="chart-box">
+          <div class="chart-header">
+            <h4>Participación por Adm. Zonal</h4>
+            <span class="chart-tag">% Zonal</span>
+          </div>
+          <p class="chart-desc">Distribución porcentual de expedientes gestionados por cada Administración Zonal.</p>
+          <div class="chart-wrapper tall">
+            <canvas id="chart-zonales"></canvas>
+          </div>
+        </div>
+
+        <!-- Chart 4: Collaborative Entities -->
+        <div class="chart-box">
+          <div class="chart-header">
+            <h4>Certificados por Entidad Colaboradora</h4>
+            <span class="chart-tag">Colegio vs Desintecsa</span>
+          </div>
+          <p class="chart-desc">Proporción de revisiones técnicas en Fase 1.</p>
+          <div class="chart-wrapper donut">
+            <canvas id="chart-entidades"></canvas>
+          </div>
+        </div>
+
+        <!-- Chart 5: Transition Lead Time Distribution -->
+        <div class="chart-box">
+          <div class="chart-header">
+            <h4>Tiempos entre Fases (Días)</h4>
+            <span class="chart-tag">Lead Time</span>
+          </div>
+          <p class="chart-desc">Distribución del tiempo transcurrido desde la certificación en EC hasta el ingreso formal en la Zonal.</p>
+          <div class="chart-wrapper">
+            <canvas id="chart-tiempos"></canvas>
+          </div>
+        </div>
+      </div>
+    </aside>
+  </main>
+
+  <!-- Detailed Data Drawer / Table Modal -->
+  <div class="data-drawer-overlay hidden" id="data-drawer-overlay">
+    <div class="data-drawer">
+      <div class="data-drawer-header">
+        <div class="drawer-title-group">
+          <i data-lucide="database"></i>
+          <div>
+            <h3>Explorador Detallado de Predios y Trámites</h3>
+            <p id="table-record-count-label">Mostrando proyectos filtrados</p>
+          </div>
+        </div>
+        <div class="drawer-actions">
+          <button id="table-export-btn" class="btn btn-secondary">
+            <i data-lucide="download"></i> Exportar
+          </button>
+          <button id="close-drawer-btn" class="icon-btn">
+            <i data-lucide="x"></i>
+          </button>
+        </div>
+      </div>
+
+      <div class="data-drawer-body">
+        <div class="table-responsive">
+          <table class="data-table" id="data-table">
+            <thead>
+              <tr>
+                <th>N° Predio</th>
+                <th>Fase Actual</th>
+                <th>Licencia</th>
+                <th>Proyecto</th>
+                <th>Propietario</th>
+                <th>Adm. Zonal</th>
+                <th>Parroquia</th>
+                <th>Entidad Colab.</th>
+                <th>F. Emisión EC</th>
+                <th>F. Inicio AZ</th>
+                <th>F. Emisión AZ</th>
+                <th>Días Transición</th>
+                <th>Acción</th>
+              </tr>
+            </thead>
+            <tbody id="table-tbody">
+              <!-- Dynamically populated -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Pagination Footer -->
+      <div class="data-drawer-footer">
+        <div class="pagination-info" id="pagination-info">Página 1 de 1</div>
+        <div class="pagination-controls">
+          <button id="prev-page-btn" class="btn btn-secondary btn-sm" disabled>
+            <i data-lucide="chevron-left"></i> Anterior
+          </button>
+          <button id="next-page-btn" class="btn btn-secondary btn-sm">
+            Siguiente <i data-lucide="chevron-right"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Detail Modal Card for Selected Predio -->
+  <div class="detail-modal-overlay hidden" id="detail-modal-overlay">
+    <div class="detail-modal-card" id="detail-modal-card">
+      <!-- Populated dynamically -->
+    </div>
+  </div>
+
+  <!-- Standalone Data Bundle (permite abrir index.html directamente sin requerir servidor) -->
+  <script src="public/data/licencias_data.js"></script>
+  <!-- App Logic -->
+  <script src="app.js"></script>
+</body>
+</html>

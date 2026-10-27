@@ -1,0 +1,20 @@
+# Archivos GIS de gran escala (>100MB)
+*.dbf
+*.shp
+*.shx
+*.prj
+PREDIAL QUITO 2026*
+
+# Entorno y dependencias
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Archivos del sistema y editores
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.bak

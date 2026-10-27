@@ -1,0 +1,25 @@
+﻿{
+    "promedio_dias_transicion":  204,
+    "fase1_stayed":  1535,
+    "fase1_total":  4691,
+    "fase2_stayed":  3950,
+    "por_entidad":  {
+                        "Colegio de Arquitectos":  3147,
+                        "Desintecsa":  1544
+                    },
+    "fase3_total":  401,
+    "fase2_passed":  4351,
+    "mediana_dias_transicion":  172,
+    "total_proyectos":  5886,
+    "lmu10_total":  326,
+    "por_anio":  {
+                     "2023":  261,
+                     "2025":  1617,
+                     "2024":  2727,
+                     "2026":  1281
+                 },
+    "promedio_dias_ejecucion_az":  17.7,
+    "full_funnel":  84,
+    "lmu20_total":  5560,
+    "fase2_total":  4068
+}
