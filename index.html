@@ -76,9 +76,9 @@
         <i data-lucide="building-2"></i>
       </div>
       <div class="kpi-content">
-        <div class="kpi-label">Total Proyectos</div>
+        <div class="kpi-label">Total Predios</div>
         <div class="kpi-value" id="kpi-val-total">5,886</div>
-        <div class="kpi-sub" id="kpi-sub-total">LMU 10 y LMU 20</div>
+        <div class="kpi-sub" id="kpi-sub-total">100% de la muestra DMQ</div>
       </div>
     </div>
 
@@ -88,8 +88,8 @@
       </div>
       <div class="kpi-content">
         <div class="kpi-label">Fase 1: Entidades Colab.</div>
-        <div class="kpi-value" id="kpi-val-fase1">4,691</div>
-        <div class="kpi-sub highlight-amber" id="kpi-sub-fase1">1,535 se quedaron (32.7%)</div>
+        <div class="kpi-value" id="kpi-val-fase1">1,535</div>
+        <div class="kpi-sub highlight-amber" id="kpi-sub-fase1">26.1% • 4,691 en EC total</div>
       </div>
     </div>
 
@@ -99,8 +99,8 @@
       </div>
       <div class="kpi-content">
         <div class="kpi-label">Fase 2: Admin. Zonales</div>
-        <div class="kpi-value" id="kpi-val-fase2">4,068</div>
-        <div class="kpi-sub highlight-green" id="kpi-sub-fase2">67.1% tasa de avance a AZ</div>
+        <div class="kpi-value" id="kpi-val-fase2">3,950</div>
+        <div class="kpi-sub highlight-green" id="kpi-sub-fase2">67.1% • 4,068 en gestión AZ</div>
       </div>
     </div>
 
@@ -111,7 +111,7 @@
       <div class="kpi-content">
         <div class="kpi-label">Fase 3: AMC Certificados</div>
         <div class="kpi-value" id="kpi-val-fase3">401</div>
-        <div class="kpi-sub" id="kpi-sub-fase3">84 ciclo completo trazado</div>
+        <div class="kpi-sub" id="kpi-sub-fase3">6.8% • 84 trazabilidad total</div>
       </div>
     </div>
 
@@ -121,8 +121,8 @@
       </div>
       <div class="kpi-content">
         <div class="kpi-label">Tiempo Transición (EC &rarr; AZ)</div>
-        <div class="kpi-value" id="kpi-val-tiempo">204 <small>días</small></div>
-        <div class="kpi-sub" id="kpi-sub-tiempo">Mediana: 172 d &bull; Trámite AZ: 17.7 d</div>
+        <div class="kpi-value" id="kpi-val-tiempo">195 <small>días</small></div>
+        <div class="kpi-sub" id="kpi-sub-tiempo">Mediana: 172 d • Trámite AZ: 17.7 d</div>
       </div>
     </div>
   </section>
@@ -146,14 +146,14 @@
       <span class="toolbar-label">Fase del Flujo:</span>
       <div class="pill-group" id="pill-fase">
         <button class="pill-btn active" data-fase="all">Todas</button>
-        <button class="pill-btn phase-1-btn" data-fase="1" title="Solo con registro en Entidad Colaboradora">
-          <span class="phase-dot c-phase1"></span> Fase 1 (EC)
+        <button class="pill-btn phase-1-btn" data-fase="1" title="Predios detenidos en Entidad Colaboradora">
+          <span class="phase-dot c-phase1"></span> Fase 1 (1.535)
         </button>
-        <button class="pill-btn phase-2-btn" data-fase="2" title="Con trámite ingresado o emitido en Administración Zonal">
-          <span class="phase-dot c-phase2"></span> Fase 2 (AZ)
+        <button class="pill-btn phase-2-btn" data-fase="2" title="Predios actualmente en Administración Zonal">
+          <span class="phase-dot c-phase2"></span> Fase 2 (3.950)
         </button>
-        <button class="pill-btn phase-3-btn" data-fase="3" title="Con certificado de conformidad final de AMC">
-          <span class="phase-dot c-phase3"></span> Fase 3 (AMC)
+        <button class="pill-btn phase-3-btn" data-fase="3" title="Predios con certificado de conformidad AMC">
+          <span class="phase-dot c-phase3"></span> Fase 3 (401)
         </button>
         <button class="pill-btn funnel-btn" data-fase="funnel" title="Predios con ciclo completo de punta a punta">
           <i data-lucide="git-commit"></i> Ciclo Completo (84)
@@ -168,16 +168,16 @@
       <div class="custom-select-wrap">
         <select id="select-zonal" aria-label="Filtrar por Administración Zonal">
           <option value="all">Todas las Adm. Zonales</option>
-          <option value="Administración Zonal Tumbaco">AZ Tumbaco (32.5%)</option>
-          <option value="Administración Zonal Los Chillos">AZ Los Chillos (13.3%)</option>
-          <option value="Administración Zonal Quitumbe">AZ Quitumbe (12.6%)</option>
-          <option value="Administración Zonal Norte">AZ Norte (Eugenio Espejo) (11.6%)</option>
-          <option value="Administración Zonal Calderón">AZ Calderón (9.9%)</option>
-          <option value="Administración Zonal La Delicia">AZ La Delicia (9.6%)</option>
-          <option value="Administración Zonal Sur">AZ Sur (Eloy Alfaro) (6.7%)</option>
-          <option value="Administración Zonal Centro">AZ Centro (Manuela Sáenz) (3.0%)</option>
-          <option value="Administración Zonal La Mariscal">AZ La Mariscal (0.6%)</option>
-          <option value="Administración Zonal Chocó Andino">AZ Chocó Andino (0.2%)</option>
+          <option value="Administración Zonal Tumbaco">AZ Tumbaco (1.635 • 27.8%)</option>
+          <option value="Administración Zonal Los Chillos">AZ Los Chillos (876 • 14.9%)</option>
+          <option value="Administración Zonal Quitumbe">AZ Quitumbe (789 • 13.4%)</option>
+          <option value="Administración Zonal Norte">AZ Norte (730 • 12.4%)</option>
+          <option value="Administración Zonal La Delicia">AZ La Delicia (602 • 10.2%)</option>
+          <option value="Administración Zonal Calderón">AZ Calderón (541 • 9.2%)</option>
+          <option value="Administración Zonal Sur">AZ Sur (441 • 7.5%)</option>
+          <option value="Administración Zonal Centro">AZ Centro (200 • 3.4%)</option>
+          <option value="Administración Zonal La Mariscal">AZ La Mariscal (59 • 1.0%)</option>
+          <option value="Administración Zonal Chocó Andino">AZ Chocó Andino (13 • 0.2%)</option>
         </select>
       </div>
 
@@ -247,6 +247,13 @@
         <button class="map-style-btn" data-style="mapbox://styles/mapbox/streets-v12">Calles</button>
         <button class="map-style-btn" data-style="mapbox://styles/mapbox/navigation-night-v1">Navegación</button>
       </div>
+
+      <!-- Floating Reopen Sidebar Button -->
+      <button id="reopen-sidebar-btn" class="sidebar-reopen-btn hidden" title="Mostrar Métricas y Gráficos">
+        <i data-lucide="bar-chart-3"></i>
+        <span>Métricas</span>
+        <i data-lucide="chevron-left"></i>
+      </button>
 
       <!-- Map Loading Spinner -->
       <div id="map-loader" class="map-loader">

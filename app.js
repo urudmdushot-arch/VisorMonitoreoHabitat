@@ -467,6 +467,11 @@ window.locatePredioOnMap = function(predioNum) {
   }, 1000);
 };
 
+function normStr(str) {
+  if (!str) return '';
+  return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+}
+
 /**
  * Aplicar Filtros Reactivos
  */
@@ -487,14 +492,22 @@ function applyFilters() {
       }
     }
 
-    // 3. Zonal
+    // 3. Zonal (comparación normalizada flexible sin problemas de acentos)
     if (state.filters.zonal !== 'all') {
-      if (p.ad_zonal !== state.filters.zonal) return false;
+      const targetZonal = normStr(state.filters.zonal);
+      const projectZonal = normStr(p.ad_zonal);
+      if (!projectZonal.includes(targetZonal) && !targetZonal.includes(projectZonal)) {
+        return false;
+      }
     }
 
     // 4. Entidad Colaboradora
     if (state.filters.entidad !== 'all') {
-      if (p.entidad_colaboradora !== state.filters.entidad) return false;
+      const targetEntidad = normStr(state.filters.entidad);
+      const projectEntidad = normStr(p.entidad_colaboradora);
+      if (!projectEntidad.includes(targetEntidad) && !targetEntidad.includes(projectEntidad)) {
+        return false;
+      }
     }
 
     // 5. Año
@@ -504,10 +517,10 @@ function applyFilters() {
 
     // 6. Buscador de texto
     if (state.filters.query) {
-      const q = state.filters.query.toLowerCase();
+      const q = normStr(state.filters.query);
       const matchPredio = String(p.predio).toLowerCase().includes(q);
-      const matchProj = (p.nombre_proyecto || '').toLowerCase().includes(q);
-      const matchProp = (p.propietario || '').toLowerCase().includes(q);
+      const matchProj = normStr(p.nombre_proyecto).includes(q);
+      const matchProp = normStr(p.propietario).includes(q);
       if (!matchPredio && !matchProj && !matchProp) return false;
     }
 
@@ -522,43 +535,78 @@ function applyFilters() {
 }
 
 /**
- * Actualizar Tarjetas KPI Superiores
+ * Actualizar Tarjetas KPI Superiores (100% concordancia con el mapa y la leyenda)
  */
 function updateKpiCards() {
   const current = state.filteredProjects;
   const total = current.length;
 
-  const f1 = current.filter(p => p.in_ec).length;
+  // Predios en cada estado/fase actual (idéntico al mapa)
   const f1Stayed = current.filter(p => p.fase === 1).length;
+  const f2Stayed = current.filter(p => p.fase === 2).length;
+  const f3Stayed = current.filter(p => p.fase === 3).length;
 
-  const f2 = current.filter(p => p.in_az).length;
-  const f2Passed = f1 > 0 ? Math.round(((f1 - f1Stayed) * 100) / f1) : 0;
-
-  const f3 = current.filter(p => p.in_amc).length;
+  // Totales acumulados
+  const f1Total = current.filter(p => p.in_ec).length;
+  const f2Total = current.filter(p => p.in_az).length;
   const fullFunnel = current.filter(p => p.in_ec && p.in_az && p.in_amc).length;
 
-  // Transition days calculation for filtered set
+  // Días de transición
   const transDays = current.filter(p => p.dias_transicion !== null).map(p => p.dias_transicion);
   const avgDays = transDays.length > 0 
     ? Math.round(transDays.reduce((a, b) => a + b, 0) / transDays.length) 
-    : 204;
+    : 195;
 
+  const pctF1 = total > 0 ? ((f1Stayed * 100) / total).toFixed(1) : 0;
+  const pctF2 = total > 0 ? ((f2Stayed * 100) / total).toFixed(1) : 0;
+  const pctF3 = total > 0 ? ((f3Stayed * 100) / total).toFixed(1) : 0;
+
+  // Tarjetas Superiores
   document.getElementById('kpi-val-total').textContent = total.toLocaleString();
-  document.getElementById('kpi-val-fase1').textContent = f1.toLocaleString();
-  document.getElementById('kpi-sub-fase1').textContent = `${f1Stayed.toLocaleString()} se quedaron (${f1 > 0 ? Math.round(f1Stayed * 100 / f1) : 0}%)`;
+  document.getElementById('kpi-val-fase1').textContent = f1Stayed.toLocaleString();
+  document.getElementById('kpi-sub-fase1').textContent = `${pctF1}% • ${f1Total.toLocaleString()} en EC total`;
 
-  document.getElementById('kpi-val-fase2').textContent = f2.toLocaleString();
-  document.getElementById('kpi-sub-fase2').textContent = `${f2Passed}% tasa de avance a AZ`;
+  document.getElementById('kpi-val-fase2').textContent = f2Stayed.toLocaleString();
+  document.getElementById('kpi-sub-fase2').textContent = `${pctF2}% • ${f2Total.toLocaleString()} en gestión AZ`;
 
-  document.getElementById('kpi-val-fase3').textContent = f3.toLocaleString();
-  document.getElementById('kpi-sub-fase3').textContent = `${fullFunnel} ciclo completo trazado`;
+  document.getElementById('kpi-val-fase3').textContent = f3Stayed.toLocaleString();
+  document.getElementById('kpi-sub-fase3').textContent = `${pctF3}% • ${fullFunnel} trazabilidad total`;
 
   document.getElementById('kpi-val-tiempo').innerHTML = `${avgDays} <small>días</small>`;
 
-  // Legend counts
+  // Conteo en Leyenda del Mapa (100% concordante)
   document.getElementById('leg-count-f1').textContent = f1Stayed.toLocaleString();
-  document.getElementById('leg-count-f2').textContent = current.filter(p => p.fase === 2).length.toLocaleString();
-  document.getElementById('leg-count-f3').textContent = f3.toLocaleString();
+  document.getElementById('leg-count-f2').textContent = f2Stayed.toLocaleString();
+  document.getElementById('leg-count-f3').textContent = f3Stayed.toLocaleString();
+  
+  const countLabel = document.getElementById('legend-count-label');
+  if (countLabel) {
+    countLabel.textContent = `${total.toLocaleString()} predios`;
+  }
+}
+
+/**
+ * Centrar el mapa automáticamente en los predios filtrados
+ */
+function zoomToFilteredProjects() {
+  if (!state.map || state.filteredProjects.length === 0) return;
+  const bounds = new mapboxgl.LngLatBounds();
+  let count = 0;
+  for (const p of state.filteredProjects) {
+    if (p.lng && p.lat && p.lng > -79.5 && p.lng < -77.5 && p.lat > -1.0 && p.lat < 1.0) {
+      bounds.extend([p.lng, p.lat]);
+      count++;
+    }
+  }
+  if (count > 0) {
+    const sidebar = document.getElementById('analytics-sidebar');
+    const isCollapsed = sidebar && sidebar.classList.contains('collapsed');
+    state.map.fitBounds(bounds, {
+      padding: { top: 60, bottom: 60, left: 60, right: isCollapsed ? 60 : 380 },
+      maxZoom: 15.5,
+      duration: 1200
+    });
+  }
 }
 
 /**
@@ -887,6 +935,9 @@ function setupEventListeners() {
   document.getElementById('select-zonal').addEventListener('change', (e) => {
     state.filters.zonal = e.target.value;
     applyFilters();
+    if (e.target.value !== 'all') {
+      zoomToFilteredProjects();
+    }
   });
 
   document.getElementById('select-entidad').addEventListener('change', (e) => {
@@ -917,6 +968,9 @@ function setupEventListeners() {
     document.getElementById('global-search-input').value = '';
     document.getElementById('clear-search-btn').classList.add('hidden');
     applyFilters();
+    if (state.map) {
+      state.map.flyTo({ center: [-78.485, -0.180], zoom: 11.2, duration: 1000 });
+    }
   });
 
   // 5. Global Search Input & Autocomplete
@@ -993,14 +1047,28 @@ function setupEventListeners() {
     });
   });
 
-  // 7. Sidebar toggle
-  document.getElementById('toggle-sidebar-btn').addEventListener('click', () => {
-    const sidebar = document.getElementById('analytics-sidebar');
-    sidebar.classList.toggle('collapsed');
+  // 7. Sidebar toggle & Reopen Button
+  const sidebar = document.getElementById('analytics-sidebar');
+  const toggleSidebarBtn = document.getElementById('toggle-sidebar-btn');
+  const reopenSidebarBtn = document.getElementById('reopen-sidebar-btn');
+
+  function setSidebarCollapsed(collapsed) {
+    if (!sidebar) return;
+    sidebar.classList.toggle('collapsed', collapsed);
+    if (reopenSidebarBtn) {
+      reopenSidebarBtn.classList.toggle('hidden', !collapsed);
+    }
     setTimeout(() => {
       if (state.map) state.map.resize();
     }, 320);
-  });
+  }
+
+  if (toggleSidebarBtn) {
+    toggleSidebarBtn.addEventListener('click', () => setSidebarCollapsed(true));
+  }
+  if (reopenSidebarBtn) {
+    reopenSidebarBtn.addEventListener('click', () => setSidebarCollapsed(false));
+  }
 
   // 8. Table Drawer
   document.getElementById('toggle-table-view-btn').addEventListener('click', () => {
