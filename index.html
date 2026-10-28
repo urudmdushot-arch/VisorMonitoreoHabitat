@@ -55,6 +55,11 @@
         <span class="pulsing-dot"></span>
         <span id="badge-total-count">Cargando predios...</span>
       </div>
+      <button id="toggle-filters-btn" class="btn btn-secondary" title="Abrir/Ocultar barra lateral de filtros">
+        <i data-lucide="sliders-horizontal"></i>
+        <span>Filtros</span>
+        <span id="header-filter-badge" class="filter-count-badge hidden">0</span>
+      </button>
       <button id="toggle-theme-btn" class="icon-btn" title="Cambiar tema de mapa">
         <i data-lucide="map"></i>
       </button>
@@ -100,7 +105,7 @@
       <div class="kpi-content">
         <div class="kpi-label">Fase 2: Ingreso a AZ</div>
         <div class="kpi-value" id="kpi-val-fase2">4,068</div>
-        <div class="kpi-sub highlight-green" id="kpi-sub-fase2">3,950 en gestión Zonal</div>
+        <div class="kpi-sub highlight-green" id="kpi-sub-fase2">3,950 con Licencia Emitida</div>
       </div>
     </div>
 
@@ -127,91 +132,141 @@
     </div>
   </section>
 
-  <!-- Filter & Control Toolbar -->
-  <nav class="filter-toolbar" id="filter-toolbar">
-    <!-- License Type Filter -->
-    <div class="toolbar-group">
-      <span class="toolbar-label">Tipo Licencia:</span>
-      <div class="pill-group" id="pill-licencia">
-        <button class="pill-btn active" data-filter="all">Todas</button>
-        <button class="pill-btn" data-filter="LMU 20">LMU 20 (Edificaciones)</button>
-        <button class="pill-btn" data-filter="LMU 10">LMU 10 (Suelo)</button>
-      </div>
-    </div>
-
-    <div class="toolbar-divider"></div>
-
-    <!-- Flow Phase Filter -->
-    <div class="toolbar-group">
-      <span class="toolbar-label">Fase del Flujo:</span>
-      <div class="pill-group" id="pill-fase">
-        <button class="pill-btn active" data-fase="all">Todas</button>
-        <button class="pill-btn phase-1-btn" data-fase="1" title="Predios detenidos en Entidad Colaboradora">
-          <span class="phase-dot c-phase1"></span> Fase 1 (1.535)
-        </button>
-        <button class="pill-btn phase-2-btn" data-fase="2" title="Predios actualmente en Administración Zonal">
-          <span class="phase-dot c-phase2"></span> Fase 2 (3.950)
-        </button>
-        <button class="pill-btn phase-3-btn" data-fase="3" title="Predios con certificado de conformidad AMC">
-          <span class="phase-dot c-phase3"></span> Fase 3 (401)
-        </button>
-        <button class="pill-btn funnel-btn" data-fase="funnel" title="Predios con ciclo completo de punta a punta">
-          <i data-lucide="git-commit"></i> Ciclo Completo (84)
-        </button>
-      </div>
-    </div>
-
-    <div class="toolbar-divider"></div>
-
-    <!-- Dropdowns: Zonal, Entidad, Año -->
-    <div class="toolbar-dropdowns">
-      <div class="custom-select-wrap">
-        <select id="select-zonal" aria-label="Filtrar por Administración Zonal">
-          <option value="all">Todas las Adm. Zonales</option>
-          <option value="Administración Zonal Tumbaco">AZ Tumbaco (1.635 • 27.8%)</option>
-          <option value="Administración Zonal Los Chillos">AZ Los Chillos (876 • 14.9%)</option>
-          <option value="Administración Zonal Quitumbe">AZ Quitumbe (789 • 13.4%)</option>
-          <option value="Administración Zonal Norte">AZ Norte (730 • 12.4%)</option>
-          <option value="Administración Zonal La Delicia">AZ La Delicia (602 • 10.2%)</option>
-          <option value="Administración Zonal Calderón">AZ Calderón (541 • 9.2%)</option>
-          <option value="Administración Zonal Sur">AZ Sur (441 • 7.5%)</option>
-          <option value="Administración Zonal Centro">AZ Centro (200 • 3.4%)</option>
-          <option value="Administración Zonal La Mariscal">AZ La Mariscal (59 • 1.0%)</option>
-          <option value="Administración Zonal Chocó Andino">AZ Chocó Andino (13 • 0.2%)</option>
-        </select>
-      </div>
-
-      <div class="custom-select-wrap">
-        <select id="select-entidad" aria-label="Filtrar por Entidad Colaboradora">
-          <option value="all">Todas las Entidades Colab.</option>
-          <option value="Colegio de Arquitectos">Colegio de Arquitectos (68.6%)</option>
-          <option value="Desintecsa">Desintecsa (31.4%)</option>
-        </select>
-      </div>
-
-      <div class="custom-select-wrap">
-        <select id="select-anio" aria-label="Filtrar por Año">
-          <option value="all">Todos los Años (2023 - 2026)</option>
-          <option value="2026">Año 2026</option>
-          <option value="2025">Año 2025</option>
-          <option value="2024">Año 2024</option>
-          <option value="2023">Año 2023</option>
-        </select>
-      </div>
-
-      <button id="reset-filters-btn" class="btn btn-ghost" title="Restablecer todos los filtros">
-        <i data-lucide="rotate-ccw"></i>
-        <span>Restablecer</span>
-      </button>
-    </div>
-  </nav>
-
-  <!-- Main Grid Workspace: Map + Analytics Side Panel -->
+  <!-- Main Grid Workspace: Filters Sidebar + Map + Analytics Side Panel -->
   <main class="main-workspace" id="main-workspace">
+    <!-- Collapsible Left Filters Sidebar -->
+    <aside class="filters-sidebar collapsed" id="filters-sidebar">
+      <div class="filters-sidebar-header">
+        <div class="fsh-title">
+          <i data-lucide="sliders-horizontal"></i>
+          <div>
+            <h3>Filtros de Búsqueda</h3>
+            <span class="fsh-subtitle">Parámetros del territorio</span>
+          </div>
+        </div>
+        <button id="close-filters-btn" class="icon-btn sm" title="Ocultar barra de filtros">
+          <i data-lucide="chevron-left"></i>
+        </button>
+      </div>
+
+      <div class="filters-sidebar-body">
+        <!-- Group 1: License Type -->
+        <div class="filter-block">
+          <label class="filter-block-label">Tipo de Licencia</label>
+          <div class="pill-group vertical" id="pill-licencia">
+            <button class="pill-btn active" data-filter="all">
+              <span>Todas las Licencias</span>
+              <span class="pill-badge">5,886</span>
+            </button>
+            <button class="pill-btn" data-filter="LMU 20">
+              <span>LMU 20 (Edificaciones)</span>
+              <span class="pill-badge">5,560</span>
+            </button>
+            <button class="pill-btn" data-filter="LMU 10">
+              <span>LMU 10 (Suelo / Lotes)</span>
+              <span class="pill-badge">326</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Group 2: Flow Phase / Territorial Status -->
+        <div class="filter-block">
+          <label class="filter-block-label">Fase del Flujo &bull; Estado</label>
+          <div class="pill-group vertical" id="pill-fase">
+            <button class="pill-btn active" data-fase="all">
+              <span>Todas las Fases</span>
+              <span class="pill-badge">5,886</span>
+            </button>
+            <button class="pill-btn phase-1-btn" data-fase="1" title="Predios detenidos en Entidad Colaboradora">
+              <span class="phase-dot c-phase1"></span>
+              <span>Fase 1: Detenidos en EC</span>
+              <span class="pill-badge">1,535</span>
+            </button>
+            <button class="pill-btn phase-2-btn" data-fase="2" title="Licencias emitidas por la Administración Zonal">
+              <span class="phase-dot c-phase2"></span>
+              <span>Fase 2: Con Licencia AZ</span>
+              <span class="pill-badge">3,950</span>
+            </button>
+            <button class="pill-btn phase-3-btn" data-fase="3" title="Predios con certificado de conformidad AMC">
+              <span class="phase-dot c-phase3"></span>
+              <span>Fase 3: Control AMC</span>
+              <span class="pill-badge">401</span>
+            </button>
+            <button class="pill-btn funnel-btn" data-fase="funnel" title="Predios con ciclo completo de punta a punta">
+              <i data-lucide="git-commit"></i>
+              <span>Ciclo Completo Trazado</span>
+              <span class="pill-badge">84</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Group 3: Zonal Administration -->
+        <div class="filter-block">
+          <label class="filter-block-label" for="select-zonal">Administración Zonal</label>
+          <div class="custom-select-wrap">
+            <select id="select-zonal" aria-label="Filtrar por Administración Zonal">
+              <option value="all">Todas las Adm. Zonales (10)</option>
+              <option value="Administración Zonal Tumbaco">AZ Tumbaco (1.635 • 27.8%)</option>
+              <option value="Administración Zonal Los Chillos">AZ Los Chillos (876 • 14.9%)</option>
+              <option value="Administración Zonal Quitumbe">AZ Quitumbe (789 • 13.4%)</option>
+              <option value="Administración Zonal Norte">AZ Norte (730 • 12.4%)</option>
+              <option value="Administración Zonal La Delicia">AZ La Delicia (602 • 10.2%)</option>
+              <option value="Administración Zonal Calderón">AZ Calderón (541 • 9.2%)</option>
+              <option value="Administración Zonal Sur">AZ Sur (441 • 7.5%)</option>
+              <option value="Administración Zonal Centro">AZ Centro (200 • 3.4%)</option>
+              <option value="Administración Zonal La Mariscal">AZ La Mariscal (59 • 1.0%)</option>
+              <option value="Administración Zonal Chocó Andino">AZ Chocó Andino (13 • 0.2%)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Group 4: Entidad Colaboradora -->
+        <div class="filter-block">
+          <label class="filter-block-label" for="select-entidad">Entidad Colaboradora (Fase 1)</label>
+          <div class="custom-select-wrap">
+            <select id="select-entidad" aria-label="Filtrar por Entidad Colaboradora">
+              <option value="all">Todas las Entidades (2)</option>
+              <option value="Colegio de Arquitectos">Colegio de Arquitectos (68.6%)</option>
+              <option value="Desintecsa">Desintecsa (31.4%)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Group 5: Year -->
+        <div class="filter-block">
+          <label class="filter-block-label" for="select-anio">Año de Emisión</label>
+          <div class="custom-select-wrap">
+            <select id="select-anio" aria-label="Filtrar por Año">
+              <option value="all">Todos los Años (2023 - 2026)</option>
+              <option value="2026">Año 2026 (1.281)</option>
+              <option value="2025">Año 2025 (1.617)</option>
+              <option value="2024">Año 2024 (2.727)</option>
+              <option value="2023">Año 2023 (261)</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer Actions -->
+      <div class="filters-sidebar-footer">
+        <button id="reset-filters-btn" class="btn btn-secondary w-full" title="Restablecer todos los filtros">
+          <i data-lucide="rotate-ccw"></i>
+          <span>Restablecer Filtros</span>
+        </button>
+      </div>
+    </aside>
+
     <!-- Map Container -->
     <div class="map-section" id="map-section">
       <div id="mapbox-container"></div>
-      
+
+      <!-- Floating Button to Open Filters (When collapsed) -->
+      <button id="reopen-filters-btn" class="filters-reopen-btn" title="Desplegar barra lateral de filtros">
+        <i data-lucide="sliders-horizontal"></i>
+        <span>Filtros</span>
+        <span id="reopen-filter-badge" class="filter-count-badge hidden">0</span>
+      </button>
+
       <!-- Map Floating Controls & Legend -->
       <div class="map-legend-card" id="map-legend-card">
         <div class="legend-header">
@@ -226,7 +281,7 @@
           </div>
           <div class="legend-item" data-filter-fase="2">
             <span class="legend-dot c-phase2"></span>
-            <span class="legend-name">Fase 2: En Gestión Zonal</span>
+            <span class="legend-name">Fase 2: Con Licencia AZ</span>
             <span class="legend-badge" id="leg-count-f2">3,950</span>
           </div>
           <div class="legend-item" data-filter-fase="3">

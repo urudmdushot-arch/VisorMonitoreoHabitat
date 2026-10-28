@@ -49,6 +49,19 @@ $az_only_list = @($data | Where-Object { $_.in_ec -ne $true -and $_.in_az -eq $t
 Write-Host "Total directo AZ:" $az_only_list.Count
 $az_only_list | Group-Object tipo_licencia | Select-Object Name, Count | Format-Table -AutoSize
 $az_only_list | Group-Object year | Select-Object Name, Count | Format-Table -AutoSize
-Write-Host "Ejemplos:"
-$az_only_list | Select-Object -First 3 | Select-Object predio, tipo_licencia, year, nombre_proyecto, ad_zonal | Format-Table -AutoSize
+Write-Host "`n--- ESTADOS DETALLADOS DE LOS 3,950 EN GESTION AZ ---"
+$fase2 = @($data | Where-Object { $_.fase -eq 2 })
+Write-Host "Total en Fase 2:" $fase2.Count
+
+Write-Host "`nPor Estado de Tramite:"
+$fase2 | Group-Object estado_tramite | Select-Object Name, Count | Format-Table -AutoSize
+
+Write-Host "`nPor Emision de Licencia:"
+$con_emision = @($fase2 | Where-Object { $_.fecha_emision_az -ne $null -and $_.fecha_emision_az -ne "" }).Count
+$sin_emision = @($fase2 | Where-Object { $_.fecha_emision_az -eq $null -or $_.fecha_emision_az -eq "" }).Count
+Write-Host "Licencia LMU ya emitida por la Zonal (pero sin Certificado AMC):" $con_emision
+Write-Host "En tramite en la Zonal (sin fecha emision):" $sin_emision
+
+Write-Host "`nMuestra de 5 predios en Fase 2:"
+$fase2 | Select-Object -First 5 | Select-Object predio, tipo_licencia, year, ad_zonal, estado_tramite, fecha_inicio_az, fecha_emision_az | Format-Table -AutoSize
 Write-Host "=================================================================="

@@ -569,7 +569,7 @@ function updateKpiCards() {
   document.getElementById('kpi-sub-fase1').textContent = `${f1Stayed.toLocaleString()} detenidos en EC (${pctF1}%)`;
 
   document.getElementById('kpi-val-fase2').textContent = f2Total.toLocaleString();
-  document.getElementById('kpi-sub-fase2').textContent = `${f2Stayed.toLocaleString()} en gestión Zonal (${pctF2}%)`;
+  document.getElementById('kpi-sub-fase2').textContent = `${f2Stayed.toLocaleString()} con Licencia Emitida (${pctF2}%)`;
 
   document.getElementById('kpi-val-fase3').textContent = f3Total.toLocaleString();
   document.getElementById('kpi-sub-fase3').textContent = `${fullFunnel} trazabilidad ciclo completo`;
@@ -580,6 +580,25 @@ function updateKpiCards() {
   document.getElementById('leg-count-f1').textContent = f1Stayed.toLocaleString();
   document.getElementById('leg-count-f2').textContent = f2Stayed.toLocaleString();
   document.getElementById('leg-count-f3').textContent = f3Stayed.toLocaleString();
+
+  // Actualizar indicadores de filtros activos
+  let activeFilterCount = 0;
+  if (state.filters.licencia !== 'all') activeFilterCount++;
+  if (state.filters.fase !== 'all') activeFilterCount++;
+  if (state.filters.zonal !== 'all') activeFilterCount++;
+  if (state.filters.entidad !== 'all') activeFilterCount++;
+  if (state.filters.anio !== 'all') activeFilterCount++;
+
+  const headerBadge = document.getElementById('header-filter-badge');
+  const reopenBadge = document.getElementById('reopen-filter-badge');
+  if (headerBadge) {
+    headerBadge.textContent = activeFilterCount;
+    headerBadge.classList.toggle('hidden', activeFilterCount === 0);
+  }
+  if (reopenBadge) {
+    reopenBadge.textContent = activeFilterCount;
+    reopenBadge.classList.toggle('hidden', activeFilterCount === 0);
+  }
   
   const countLabel = document.getElementById('legend-count-label');
   if (countLabel) {
@@ -1070,6 +1089,36 @@ function setupEventListeners() {
   }
   if (reopenSidebarBtn) {
     reopenSidebarBtn.addEventListener('click', () => setSidebarCollapsed(false));
+  }
+
+  // 7b. Filters Sidebar Toggle (Barra Lateral Desplegable de Filtros)
+  const filtersSidebar = document.getElementById('filters-sidebar');
+  const toggleFiltersBtn = document.getElementById('toggle-filters-btn');
+  const closeFiltersBtn = document.getElementById('close-filters-btn');
+  const reopenFiltersBtn = document.getElementById('reopen-filters-btn');
+
+  function setFiltersSidebarCollapsed(collapsed) {
+    if (!filtersSidebar) return;
+    filtersSidebar.classList.toggle('collapsed', collapsed);
+    if (reopenFiltersBtn) {
+      reopenFiltersBtn.classList.toggle('hidden', !collapsed);
+    }
+    setTimeout(() => {
+      if (state.map) state.map.resize();
+    }, 320);
+  }
+
+  if (toggleFiltersBtn) {
+    toggleFiltersBtn.addEventListener('click', () => {
+      const isCollapsed = filtersSidebar.classList.contains('collapsed');
+      setFiltersSidebarCollapsed(!isCollapsed);
+    });
+  }
+  if (closeFiltersBtn) {
+    closeFiltersBtn.addEventListener('click', () => setFiltersSidebarCollapsed(true));
+  }
+  if (reopenFiltersBtn) {
+    reopenFiltersBtn.addEventListener('click', () => setFiltersSidebarCollapsed(false));
   }
 
   // 8. Table Drawer
