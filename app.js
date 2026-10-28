@@ -549,6 +549,7 @@ function updateKpiCards() {
   // Totales acumulados
   const f1Total = current.filter(p => p.in_ec).length;
   const f2Total = current.filter(p => p.in_az).length;
+  const f3Total = current.filter(p => p.in_amc).length;
   const fullFunnel = current.filter(p => p.in_ec && p.in_az && p.in_amc).length;
 
   // Días de transición
@@ -561,20 +562,21 @@ function updateKpiCards() {
   const pctF2 = total > 0 ? ((f2Stayed * 100) / total).toFixed(1) : 0;
   const pctF3 = total > 0 ? ((f3Stayed * 100) / total).toFixed(1) : 0;
 
-  // Tarjetas Superiores
+  // Tarjetas Superiores (Flujo Acumulado que ingresó a cada etapa)
   document.getElementById('kpi-val-total').textContent = total.toLocaleString();
-  document.getElementById('kpi-val-fase1').textContent = f1Stayed.toLocaleString();
-  document.getElementById('kpi-sub-fase1').textContent = `${pctF1}% • ${f1Total.toLocaleString()} en EC total`;
+  
+  document.getElementById('kpi-val-fase1').textContent = f1Total.toLocaleString();
+  document.getElementById('kpi-sub-fase1').textContent = `${f1Stayed.toLocaleString()} detenidos en EC (${pctF1}%)`;
 
-  document.getElementById('kpi-val-fase2').textContent = f2Stayed.toLocaleString();
-  document.getElementById('kpi-sub-fase2').textContent = `${pctF2}% • ${f2Total.toLocaleString()} en gestión AZ`;
+  document.getElementById('kpi-val-fase2').textContent = f2Total.toLocaleString();
+  document.getElementById('kpi-sub-fase2').textContent = `${f2Stayed.toLocaleString()} en gestión Zonal (${pctF2}%)`;
 
-  document.getElementById('kpi-val-fase3').textContent = f3Stayed.toLocaleString();
-  document.getElementById('kpi-sub-fase3').textContent = `${pctF3}% • ${fullFunnel} trazabilidad total`;
+  document.getElementById('kpi-val-fase3').textContent = f3Total.toLocaleString();
+  document.getElementById('kpi-sub-fase3').textContent = `${fullFunnel} trazabilidad ciclo completo`;
 
   document.getElementById('kpi-val-tiempo').innerHTML = `${avgDays} <small>días</small>`;
 
-  // Conteo en Leyenda del Mapa (100% concordante)
+  // Conteo en Leyenda del Mapa (Estado territorial actual)
   document.getElementById('leg-count-f1').textContent = f1Stayed.toLocaleString();
   document.getElementById('leg-count-f2').textContent = f2Stayed.toLocaleString();
   document.getElementById('leg-count-f3').textContent = f3Stayed.toLocaleString();
