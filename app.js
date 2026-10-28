@@ -114,95 +114,83 @@ function initMap() {
 
   state.map.on('load', () => {
     state.mapLoaded = true;
+    setupMapLayers();
+    if (state.filteredProjects.length > 0) {
+      updateMapSource();
+    }
+  });
+}
 
-    // Add empty GeoJSON source with clustering
+/**
+ * Configurar capas de polígonos y geometría predial en Mapbox
+ */
+function setupMapLayers() {
+  if (!state.map.getSource('predios-source')) {
     state.map.addSource('predios-source', {
       type: 'geojson',
-      data: { type: 'FeatureCollection', features: [] },
-      cluster: true,
-      clusterMaxZoom: 14,
-      clusterRadius: 50
+      data: { type: 'FeatureCollection', features: [] }
     });
+  }
 
-    // Cluster Circles
+  // 1. Capa de Relleno del Polígono Predial (Fill)
+  if (!state.map.getLayer('predios-polygons')) {
     state.map.addLayer({
-      id: 'clusters',
-      type: 'circle',
+      id: 'predios-polygons',
+      type: 'fill',
       source: 'predios-source',
-      filter: ['has', 'point_count'],
       paint: {
-        'circle-color': [
-          'step',
-          ['get', 'point_count'],
-          'rgba(56, 189, 248, 0.85)',
-          20,
-          'rgba(245, 158, 11, 0.85)',
-          100,
-          'rgba(139, 92, 246, 0.85)',
-          500,
-          'rgba(239, 68, 68, 0.85)'
-        ],
-        'circle-radius': [
-          'step',
-          ['get', 'point_count'],
-          16,
-          20,
-          22,
-          100,
-          28,
-          500,
-          36
-        ],
-        'circle-stroke-width': 2,
-        'circle-stroke-color': '#ffffff'
-      }
-    });
-
-    // Cluster Count Label
-    state.map.addLayer({
-      id: 'cluster-count',
-      type: 'symbol',
-      source: 'predios-source',
-      filter: ['has', 'point_count'],
-      layout: {
-        'text-field': '{point_count_abbreviated}',
-        'text-font': ['DIN Pro Medium', 'Arial Unicode MS Bold'],
-        'text-size': 12
-      },
-      paint: {
-        'text-color': '#ffffff'
-      }
-    });
-
-    // Individual Unclustered Points
-    state.map.addLayer({
-      id: 'unclustered-point',
-      type: 'circle',
-      source: 'predios-source',
-      filter: ['!', ['has', 'point_count']],
-      paint: {
-        'circle-color': [
+        'fill-color': [
           'match',
           ['get', 'fase'],
-          1, '#06b6d4',  // Fase 1: Cyan
-          2, '#f59e0b',  // Fase 2: Amber
-          3, '#10b981',  // Fase 3: Green
+          1, '#06b6d4',  // Fase 1 (EC): Cyan
+          2, '#f59e0b',  // Fase 2 (AZ): Ámbar
+          3, '#10b981',  // Fase 3 (AMC): Verde esmeralda
           '#38bdf8'
         ],
-        'circle-radius': 6,
-        'circle-stroke-width': 1.5,
-        'circle-stroke-color': '#ffffff'
+        'fill-opacity': [
+          'interpolate', ['linear'], ['zoom'],
+          9, 0.50,
+          13, 0.65,
+          16, 0.82
+        ]
       }
     });
+  }
 
-    // Hover glow effect layer
+  // 2. Capa de Contorno / Vértices Geométricos (Line)
+  if (!state.map.getLayer('predios-outline')) {
     state.map.addLayer({
-      id: 'unclustered-point-glow',
-      type: 'circle',
+      id: 'predios-outline',
+      type: 'line',
       source: 'predios-source',
-      filter: ['!', ['has', 'point_count']],
       paint: {
-        'circle-color': [
+        'line-color': [
+          'match',
+          ['get', 'fase'],
+          1, '#67e8f9',
+          2, '#fde047',
+          3, '#6ee7b7',
+          '#ffffff'
+        ],
+        'line-width': [
+          'interpolate', ['linear'], ['zoom'],
+          10, 1.0,
+          13, 1.8,
+          16, 2.8
+        ],
+        'line-opacity': 0.95
+      }
+    });
+  }
+
+  // 3. Resplandor exterior (Glow suave)
+  if (!state.map.getLayer('predios-glow')) {
+    state.map.addLayer({
+      id: 'predios-glow',
+      type: 'line',
+      source: 'predios-source',
+      paint: {
+        'line-color': [
           'match',
           ['get', 'fase'],
           1, '#06b6d4',
@@ -210,46 +198,33 @@ function initMap() {
           3, '#10b981',
           '#38bdf8'
         ],
-        'circle-radius': 12,
-        'circle-opacity': 0.3
+        'line-width': [
+          'interpolate', ['linear'], ['zoom'],
+          11, 2.0,
+          15, 4.5,
+          18, 7.0
+        ],
+        'line-opacity': 0.35,
+        'line-blur': 2
       }
     });
+  }
 
-    // Click on Cluster -> Zoom In
-    state.map.on('click', 'clusters', (e) => {
-      const features = state.map.queryRenderedFeatures(e.point, { layers: ['clusters'] });
-      const clusterId = features[0].properties.cluster_id;
-      state.map.getSource('predios-source').getClusterExpansionZoom(clusterId, (err, zoom) => {
-        if (err) return;
-        state.map.easeTo({
-          center: features[0].geometry.coordinates,
-          zoom: zoom + 0.5
-        });
-      });
-    });
+  // Clic en Polígono -> Mostrar Popup Ficha Técnica
+  state.map.on('click', 'predios-polygons', (e) => {
+    if (!e.features || !e.features.length) return;
+    const feat = e.features[0];
+    const props = feat.properties;
+    const coordinates = [e.lngLat.lng, e.lngLat.lat];
+    showPredioPopup(props, coordinates);
+  });
 
-    // Click on Individual Point -> Show Popup
-    state.map.on('click', 'unclustered-point', (e) => {
-      const coordinates = e.features[0].geometry.coordinates.slice();
-      const props = e.features[0].properties;
-
-      while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
-        coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
-      }
-
-      showPredioPopup(props, coordinates);
-    });
-
-    // Pointer cursor on hover
-    state.map.on('mouseenter', 'clusters', () => { state.map.getCanvas().style.cursor = 'pointer'; });
-    state.map.on('mouseleave', 'clusters', () => { state.map.getCanvas().style.cursor = ''; });
-    state.map.on('mouseenter', 'unclustered-point', () => { state.map.getCanvas().style.cursor = 'pointer'; });
-    state.map.on('mouseleave', 'unclustered-point', () => { state.map.getCanvas().style.cursor = ''; });
-
-    // Initial source update if data was already fetched
-    if (state.filteredProjects.length > 0) {
-      updateMapSource();
-    }
+  // Cursor interactivo sobre polígonos
+  state.map.on('mouseenter', 'predios-polygons', () => { 
+    state.map.getCanvas().style.cursor = 'pointer'; 
+  });
+  state.map.on('mouseleave', 'predios-polygons', () => { 
+    state.map.getCanvas().style.cursor = ''; 
   });
 }
 
@@ -260,16 +235,25 @@ function updateMapSource() {
   if (!state.mapLoaded || !state.map.getSource('predios-source')) return;
 
   const features = state.filteredProjects
-    .filter(p => p.lng && p.lat)
+    .filter(p => p.geom || (p.lng && p.lat))
     .map(p => ({
       type: 'Feature',
-      geometry: {
-        type: 'Point',
-        coordinates: [p.lng, p.lat]
+      geometry: p.geom || {
+        type: 'Polygon',
+        coordinates: [
+          [
+            [p.lng - 0.00018, p.lat - 0.00018],
+            [p.lng + 0.00018, p.lat - 0.00018],
+            [p.lng + 0.00018, p.lat + 0.00018],
+            [p.lng - 0.00018, p.lat + 0.00018],
+            [p.lng - 0.00018, p.lat - 0.00018]
+          ]
+        ]
       },
       properties: {
         predio: p.predio,
         fase: p.fase,
+        is_exact_lot: p.is_exact_lot ? 1 : 0,
         tipo_licencia: p.tipo_licencia,
         nombre_proyecto: p.nombre_proyecto || 'Sin nombre registrado',
         propietario: p.propietario || 'Sin propietario',
@@ -287,7 +271,9 @@ function updateMapSource() {
         amc_registro: p.amc_registro || '',
         amc_resultado: p.amc_resultado || '',
         area_bruta: p.area_bruta || 0,
-        year: p.year || 2024
+        year: p.year || 2024,
+        center_lng: p.lng,
+        center_lat: p.lat
       }
     }));
 
@@ -296,7 +282,10 @@ function updateMapSource() {
     features: features
   });
 
-  document.getElementById('legend-count-label').textContent = `${features.length.toLocaleString()} en mapa`;
+  const countLabel = document.getElementById('legend-count-label');
+  if (countLabel) {
+    countLabel.textContent = `${features.length.toLocaleString()} predios (polígonos)`;
+  }
 }
 
 /**
@@ -997,8 +986,8 @@ function setupEventListeners() {
       if (state.map) {
         state.map.setStyle(styleUrl);
         state.map.once('style.load', () => {
-          // Re-add layers
-          initMap();
+          setupMapLayers();
+          updateMapSource();
         });
       }
     });
