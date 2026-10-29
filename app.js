@@ -249,78 +249,51 @@ function setupMapLayers() {
     });
   }
 
-  // ──────────────── CAPAS PARA PREDIOS APROXIMADOS (círculos de punto) ────────────────
+  // ──────────────── CAPAS PARA PREDIOS APROXIMADOS (polígonos, solo visibles con zoom >= 14) ────────────────
+  // A nivel ciudad se ocultan para evitar solapamiento visual.
+  // Al acercarse a nivel calle aparecen como polígonos semitransparentes con borde punteado.
 
-  // 4. Círculo exterior (halo de color)
-  if (!state.map.getLayer('predios-approx-halo')) {
+  if (!state.map.getLayer('predios-approx-fill')) {
     state.map.addLayer({
-      id: 'predios-approx-halo',
-      type: 'circle',
+      id: 'predios-approx-fill',
+      type: 'fill',
       source: 'predios-approx-source',
+      minzoom: 14,
       paint: {
-        'circle-color': [
-          'match', ['get', 'fase'],
-          1, '#06b6d4',
-          2, '#f59e0b',
-          3, '#10b981',
-          '#38bdf8'
-        ],
-        'circle-radius': [
-          'interpolate', ['linear'], ['zoom'],
-          10, 5,
-          14, 8,
-          17, 12
-        ],
-        'circle-opacity': 0.18,
-        'circle-blur': 1
+        'fill-color': ['match', ['get', 'fase'], 1, '#06b6d4', 2, '#f59e0b', 3, '#10b981', '#38bdf8'],
+        'fill-opacity': ['interpolate', ['linear'], ['zoom'], 14, 0.20, 16, 0.35, 18, 0.45]
       }
     });
   }
 
-  // 5. Círculo interior (punto principal)
-  if (!state.map.getLayer('predios-approx-dot')) {
+  if (!state.map.getLayer('predios-approx-outline')) {
     state.map.addLayer({
-      id: 'predios-approx-dot',
-      type: 'circle',
+      id: 'predios-approx-outline',
+      type: 'line',
       source: 'predios-approx-source',
+      minzoom: 14,
       paint: {
-        'circle-color': [
-          'match', ['get', 'fase'],
-          1, '#06b6d4',
-          2, '#f59e0b',
-          3, '#10b981',
-          '#38bdf8'
-        ],
-        'circle-radius': [
-          'interpolate', ['linear'], ['zoom'],
-          10, 3,
-          14, 5,
-          17, 7
-        ],
-        'circle-opacity': 0.80,
-        'circle-stroke-width': 1.5,
-        'circle-stroke-color': '#ffffff',
-        'circle-stroke-opacity': 0.60
+        'line-color': ['match', ['get', 'fase'], 1, '#67e8f9', 2, '#fde047', 3, '#6ee7b7', '#ffffff'],
+        'line-width': 1.2,
+        'line-opacity': 0.65,
+        'line-dasharray': [3, 2]
       }
     });
   }
 
   // ──────────────── INTERACTIVIDAD ────────────────
 
-  // Clic en polígono exacto
   state.map.on('click', 'predios-polygons', (e) => {
     if (!e.features || !e.features.length) return;
     showPredioPopup(e.features[0].properties, [e.lngLat.lng, e.lngLat.lat]);
   });
 
-  // Clic en punto aproximado
-  state.map.on('click', 'predios-approx-dot', (e) => {
+  state.map.on('click', 'predios-approx-fill', (e) => {
     if (!e.features || !e.features.length) return;
     showPredioPopup(e.features[0].properties, [e.lngLat.lng, e.lngLat.lat]);
   });
 
-  // Cursor interactivo
-  ['predios-polygons', 'predios-approx-dot'].forEach(layerId => {
+  ['predios-polygons', 'predios-approx-fill'].forEach(layerId => {
     state.map.on('mouseenter', layerId, () => { state.map.getCanvas().style.cursor = 'pointer'; });
     state.map.on('mouseleave', layerId, () => { state.map.getCanvas().style.cursor = ''; });
   });
@@ -387,12 +360,18 @@ function updateMapSource() {
       // Agregar como polígono exacto
       exactFeatures.push({ type: 'Feature', geometry: p.geom, properties: props });
     } else {
-      // Predio aproximado → punto en la coordenada estimada
-      approxFeatures.push({
-        type: 'Feature',
-        geometry: { type: 'Point', coordinates: [p.lng, p.lat] },
-        properties: props
-      });
+      // Polígono aproximado (placeholder rectangular) — oculto hasta zoom 14
+      const geom = p.geom || {
+        type: 'Polygon',
+        coordinates: [[
+          [p.lng - 0.00012, p.lat - 0.00012],
+          [p.lng + 0.00012, p.lat - 0.00012],
+          [p.lng + 0.00012, p.lat + 0.00012],
+          [p.lng - 0.00012, p.lat + 0.00012],
+          [p.lng - 0.00012, p.lat - 0.00012]
+        ]]
+      };
+      approxFeatures.push({ type: 'Feature', geometry: geom, properties: props });
     }
   }
 
