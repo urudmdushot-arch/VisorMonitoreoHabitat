@@ -585,27 +585,29 @@ function applyFilters() {
       }
     }
 
-    // 3. Zonal (comparación normalizada flexible sin problemas de acentos)
-    if (state.filters.zonal !== 'all') {
-      const targetZonal = normStr(state.filters.zonal);
+    // 3. Zonal (multi-checklist — array o 'all')
+    if (state.filters.zonal !== 'all' && state.filters.zonal.length > 0) {
       const projectZonal = normStr(p.ad_zonal);
-      if (!projectZonal.includes(targetZonal) && !targetZonal.includes(projectZonal)) {
-        return false;
-      }
+      const match = state.filters.zonal.some(v => {
+        const t = normStr(v);
+        return projectZonal.includes(t) || t.includes(projectZonal);
+      });
+      if (!match) return false;
     }
 
-    // 4. Entidad Colaboradora
-    if (state.filters.entidad !== 'all') {
-      const targetEntidad = normStr(state.filters.entidad);
+    // 4. Entidad Colaboradora (multi-checklist)
+    if (state.filters.entidad !== 'all' && state.filters.entidad.length > 0) {
       const projectEntidad = normStr(p.entidad_colaboradora);
-      if (!projectEntidad.includes(targetEntidad) && !targetEntidad.includes(projectEntidad)) {
-        return false;
-      }
+      const match = state.filters.entidad.some(v => {
+        const t = normStr(v);
+        return projectEntidad.includes(t) || t.includes(projectEntidad);
+      });
+      if (!match) return false;
     }
 
-    // 5. Año
-    if (state.filters.anio !== 'all') {
-      if (p.year != state.filters.anio) return false;
+    // 5. Año (multi-checklist)
+    if (state.filters.anio !== 'all' && state.filters.anio.length > 0) {
+      if (!state.filters.anio.includes(String(p.year))) return false;
     }
 
     // 6. Buscador de texto
@@ -678,9 +680,9 @@ function updateKpiCards() {
   let activeFilterCount = 0;
   if (state.filters.licencia !== 'all') activeFilterCount++;
   if (state.filters.fase !== 'all') activeFilterCount++;
-  if (state.filters.zonal !== 'all') activeFilterCount++;
-  if (state.filters.entidad !== 'all') activeFilterCount++;
-  if (state.filters.anio !== 'all') activeFilterCount++;
+  if (state.filters.zonal !== 'all' && state.filters.zonal.length > 0) activeFilterCount++;
+  if (state.filters.entidad !== 'all' && state.filters.entidad.length > 0) activeFilterCount++;
+  if (state.filters.anio !== 'all' && state.filters.anio.length > 0) activeFilterCount++;
 
   const headerBadge = document.getElementById('header-filter-badge');
   const reopenBadge = document.getElementById('reopen-filter-badge');
@@ -1045,23 +1047,110 @@ function setupEventListeners() {
     });
   });
 
-  // 3. Dropdowns
-  document.getElementById('select-zonal').addEventListener('change', (e) => {
-    state.filters.zonal = e.target.value;
+  // 3. Checklist filters (Zonal, Entidad, Año)
+  function setupChecklistFilter(group, onChangeCallback) {
+    const listEl   = document.getElementById(`cl-${group}-list`);
+    const toggleEl = listEl ? listEl.previousElementSibling : null;
+    const labelEl  = document.getElementById(`cl-${group}-label`);
+    const allCb    = listEl ? listEl.querySelector('.cl-all') : null;
+    const options  = listEl ? [...listEl.querySelectorAll(`.cl-option[data-group="${group}"]`)] : [];
+
+    if (!listEl || !toggleEl) return;
+
+    // Open/close dropdown
+    toggleEl.addEventListener('click', () => {
+      const expanded = toggleEl.getAttribute('aria-expanded') === 'true';
+      // Close all other checklists first
+      document.querySelectorAll('.checklist-toggle[aria-expanded="true"]').forEach(btn => {
+        if (btn !== toggleEl) {
+          btn.setAttribute('aria-expanded', 'false');
+          btn.nextElementSibling.classList.add('hidden');
+        }
+      });
+      toggleEl.setAttribute('aria-expanded', String(!expanded));
+      listEl.classList.toggle('hidden', expanded);
+    });
+
+    // "Todas" checkbox
+    allCb.addEventListener('change', () => {
+      if (allCb.checked) {
+        options.forEach(cb => { cb.checked = false; });
+      }
+      syncState();
+    });
+
+    // Individual options
+    options.forEach(cb => {
+      cb.addEventListener('change', () => {
+        if (options.some(c => c.checked)) {
+          allCb.checked = false;
+        } else {
+          allCb.checked = true;
+        }
+        syncState();
+      });
+    });
+
+    function syncState() {
+      const selected = options.filter(c => c.checked).map(c => c.value);
+      const isAll = selected.length === 0;
+
+      if (isAll) {
+        allCb.checked = true;
+        state.filters[group] = 'all';
+        labelEl.textContent = labelDefaults[group];
+        toggleEl.classList.remove('has-selection');
+      } else {
+        state.filters[group] = selected;
+        // Build compact label
+        if (selected.length === 1) {
+          // Show short label (strip prefix like "Administración Zonal ")
+          labelEl.textContent = options.find(c => c.value === selected[0])
+            ?.nextElementSibling?.textContent || selected[0];
+        } else {
+          labelEl.textContent = `${selected.length} seleccionados`;
+        }
+        toggleEl.classList.add('has-selection');
+      }
+
+      onChangeCallback();
+    }
+
+    // Reset function stored on element for use in global reset
+    toggleEl._reset = () => {
+      options.forEach(cb => { cb.checked = false; });
+      allCb.checked = true;
+      state.filters[group] = 'all';
+      labelEl.textContent = labelDefaults[group];
+      toggleEl.classList.remove('has-selection');
+      listEl.classList.add('hidden');
+      toggleEl.setAttribute('aria-expanded', 'false');
+    };
+  }
+
+  const labelDefaults = {
+    zonal:   'Todas las Adm. Zonales',
+    entidad: 'Todas las Entidades',
+    anio:    'Todos los Años',
+  };
+
+  setupChecklistFilter('zonal', () => {
     applyFilters();
-    if (e.target.value !== 'all') {
+    if (state.filters.zonal !== 'all' && state.filters.zonal.length > 0) {
       zoomToFilteredProjects();
     }
   });
+  setupChecklistFilter('entidad', applyFilters);
+  setupChecklistFilter('anio', applyFilters);
 
-  document.getElementById('select-entidad').addEventListener('change', (e) => {
-    state.filters.entidad = e.target.value;
-    applyFilters();
-  });
-
-  document.getElementById('select-anio').addEventListener('change', (e) => {
-    state.filters.anio = e.target.value;
-    applyFilters();
+  // Close checklists when clicking outside
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.checklist-filter')) {
+      document.querySelectorAll('.checklist-toggle[aria-expanded="true"]').forEach(btn => {
+        btn.setAttribute('aria-expanded', 'false');
+        btn.nextElementSibling.classList.add('hidden');
+      });
+    }
   });
 
   // 4. Reset Filters
@@ -1076,9 +1165,11 @@ function setupEventListeners() {
     };
     document.querySelectorAll('#pill-licencia .pill-btn').forEach(b => b.classList.toggle('active', b.getAttribute('data-filter') === 'all'));
     document.querySelectorAll('#pill-fase .pill-btn').forEach(b => b.classList.toggle('active', b.getAttribute('data-fase') === 'all'));
-    document.getElementById('select-zonal').value = 'all';
-    document.getElementById('select-entidad').value = 'all';
-    document.getElementById('select-anio').value = 'all';
+    // Reset checklists
+    ['zonal', 'entidad', 'anio'].forEach(group => {
+      const toggle = document.querySelector(`#cl-${group} .checklist-toggle`);
+      if (toggle && toggle._reset) toggle._reset();
+    });
     document.getElementById('global-search-input').value = '';
     document.getElementById('clear-search-btn').classList.add('hidden');
     applyFilters();

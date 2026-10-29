@@ -200,49 +200,67 @@
           </div>
         </div>
 
-        <!-- Group 3: Zonal Administration -->
+        <!-- Group 3: Zonal Administration (Checklist) -->
         <div class="filter-block">
-          <label class="filter-block-label" for="select-zonal">Administración Zonal</label>
-          <div class="custom-select-wrap">
-            <select id="select-zonal" aria-label="Filtrar por Administración Zonal">
-              <option value="all">Todas las Adm. Zonales (10)</option>
-              <option value="Administración Zonal Tumbaco">AZ Tumbaco (1.635 • 27.8%)</option>
-              <option value="Administración Zonal Los Chillos">AZ Los Chillos (876 • 14.9%)</option>
-              <option value="Administración Zonal Quitumbe">AZ Quitumbe (789 • 13.4%)</option>
-              <option value="Administración Zonal Norte">AZ Norte (730 • 12.4%)</option>
-              <option value="Administración Zonal La Delicia">AZ La Delicia (602 • 10.2%)</option>
-              <option value="Administración Zonal Calderón">AZ Calderón (541 • 9.2%)</option>
-              <option value="Administración Zonal Sur">AZ Sur (441 • 7.5%)</option>
-              <option value="Administración Zonal Centro">AZ Centro (200 • 3.4%)</option>
-              <option value="Administración Zonal La Mariscal">AZ La Mariscal (59 • 1.0%)</option>
-              <option value="Administración Zonal Chocó Andino">AZ Chocó Andino (13 • 0.2%)</option>
-            </select>
+          <label class="filter-block-label">Administración Zonal</label>
+          <div class="checklist-filter" id="cl-zonal">
+            <button class="checklist-toggle" aria-expanded="false" data-target="cl-zonal-list">
+              <span class="checklist-toggle-label" id="cl-zonal-label">Todas las Adm. Zonales</span>
+              <i data-lucide="chevron-down" class="cl-chevron"></i>
+            </button>
+            <div class="checklist-list hidden" id="cl-zonal-list">
+              <label class="cl-item cl-all-item">
+                <input type="checkbox" class="cl-all" data-group="zonal" checked> <span>Todas</span>
+              </label>
+              <label class="cl-item"><input type="checkbox" class="cl-option" data-group="zonal" value="Administración Zonal Tumbaco"> <span>AZ Tumbaco</span></label>
+              <label class="cl-item"><input type="checkbox" class="cl-option" data-group="zonal" value="Administración Zonal Los Chillos"> <span>AZ Los Chillos</span></label>
+              <label class="cl-item"><input type="checkbox" class="cl-option" data-group="zonal" value="Administración Zonal Quitumbe"> <span>AZ Quitumbe</span></label>
+              <label class="cl-item"><input type="checkbox" class="cl-option" data-group="zonal" value="Administración Zonal Norte"> <span>AZ Norte</span></label>
+              <label class="cl-item"><input type="checkbox" class="cl-option" data-group="zonal" value="Administración Zonal La Delicia"> <span>AZ La Delicia</span></label>
+              <label class="cl-item"><input type="checkbox" class="cl-option" data-group="zonal" value="Administración Zonal Calderón"> <span>AZ Calderón</span></label>
+              <label class="cl-item"><input type="checkbox" class="cl-option" data-group="zonal" value="Administración Zonal Sur"> <span>AZ Sur</span></label>
+              <label class="cl-item"><input type="checkbox" class="cl-option" data-group="zonal" value="Administración Zonal Centro"> <span>AZ Centro</span></label>
+              <label class="cl-item"><input type="checkbox" class="cl-option" data-group="zonal" value="Administración Zonal La Mariscal"> <span>AZ La Mariscal</span></label>
+              <label class="cl-item"><input type="checkbox" class="cl-option" data-group="zonal" value="Administración Zonal Chocó Andino"> <span>AZ Chocó Andino</span></label>
+            </div>
           </div>
         </div>
 
-        <!-- Group 4: Entidad Colaboradora -->
+        <!-- Group 4: Entidad Colaboradora (Checklist) -->
         <div class="filter-block">
-          <label class="filter-block-label" for="select-entidad">Entidad Colaboradora (Fase 1)</label>
-          <div class="custom-select-wrap">
-            <select id="select-entidad" aria-label="Filtrar por Entidad Colaboradora">
-              <option value="all">Todas las Entidades (2)</option>
-              <option value="Colegio de Arquitectos">Colegio de Arquitectos (68.6%)</option>
-              <option value="Desintecsa">Desintecsa (31.4%)</option>
-            </select>
+          <label class="filter-block-label">Entidad Colaboradora (Fase 1)</label>
+          <div class="checklist-filter" id="cl-entidad">
+            <button class="checklist-toggle" aria-expanded="false" data-target="cl-entidad-list">
+              <span class="checklist-toggle-label" id="cl-entidad-label">Todas las Entidades</span>
+              <i data-lucide="chevron-down" class="cl-chevron"></i>
+            </button>
+            <div class="checklist-list hidden" id="cl-entidad-list">
+              <label class="cl-item cl-all-item">
+                <input type="checkbox" class="cl-all" data-group="entidad" checked> <span>Todas</span>
+              </label>
+              <label class="cl-item"><input type="checkbox" class="cl-option" data-group="entidad" value="Colegio de Arquitectos"> <span>Colegio de Arquitectos</span></label>
+              <label class="cl-item"><input type="checkbox" class="cl-option" data-group="entidad" value="Desintecsa"> <span>Desintecsa</span></label>
+            </div>
           </div>
         </div>
 
-        <!-- Group 5: Year -->
+        <!-- Group 5: Año de Emisión (Checklist) -->
         <div class="filter-block">
-          <label class="filter-block-label" for="select-anio">Año de Emisión</label>
-          <div class="custom-select-wrap">
-            <select id="select-anio" aria-label="Filtrar por Año">
-              <option value="all">Todos los Años (2023 - 2026)</option>
-              <option value="2026">Año 2026 (1.281)</option>
-              <option value="2025">Año 2025 (1.617)</option>
-              <option value="2024">Año 2024 (2.727)</option>
-              <option value="2023">Año 2023 (261)</option>
-            </select>
+          <label class="filter-block-label">Año de Emisión</label>
+          <div class="checklist-filter" id="cl-anio">
+            <button class="checklist-toggle" aria-expanded="false" data-target="cl-anio-list">
+              <span class="checklist-toggle-label" id="cl-anio-label">Todos los Años</span>
+              <i data-lucide="chevron-down" class="cl-chevron"></i>
+            </button>
+            <div class="checklist-list hidden" id="cl-anio-list">
+              <label class="cl-item cl-all-item">
+                <input type="checkbox" class="cl-all" data-group="anio" checked> <span>Todos</span>
+              </label>
+              <label class="cl-item"><input type="checkbox" class="cl-option" data-group="anio" value="2026"> <span>2026</span></label>
+              <label class="cl-item"><input type="checkbox" class="cl-option" data-group="anio" value="2025"> <span>2025</span></label>
+              <label class="cl-item"><input type="checkbox" class="cl-option" data-group="anio" value="2024"> <span>2024</span></label>
+              <label class="cl-item"><input type="checkbox" class="cl-option" data-group="anio" value="2023"> <span>2023</span></label>
+            </div>
           </div>
         </div>
       </div>
