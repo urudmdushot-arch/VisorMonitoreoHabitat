@@ -249,37 +249,10 @@ function setupMapLayers() {
     });
   }
 
-  // ──────────────── CAPAS PARA PREDIOS APROXIMADOS (polígonos, solo visibles con zoom >= 14) ────────────────
-  // A nivel ciudad se ocultan para evitar solapamiento visual.
-  // Al acercarse a nivel calle aparecen como polígonos semitransparentes con borde punteado.
-
-  if (!state.map.getLayer('predios-approx-fill')) {
-    state.map.addLayer({
-      id: 'predios-approx-fill',
-      type: 'fill',
-      source: 'predios-approx-source',
-      minzoom: 14,
-      paint: {
-        'fill-color': ['match', ['get', 'fase'], 1, '#06b6d4', 2, '#f59e0b', 3, '#10b981', '#38bdf8'],
-        'fill-opacity': ['interpolate', ['linear'], ['zoom'], 14, 0.20, 16, 0.35, 18, 0.45]
-      }
-    });
-  }
-
-  if (!state.map.getLayer('predios-approx-outline')) {
-    state.map.addLayer({
-      id: 'predios-approx-outline',
-      type: 'line',
-      source: 'predios-approx-source',
-      minzoom: 14,
-      paint: {
-        'line-color': ['match', ['get', 'fase'], 1, '#67e8f9', 2, '#fde047', 3, '#6ee7b7', '#ffffff'],
-        'line-width': 1.2,
-        'line-opacity': 0.65,
-        'line-dasharray': [3, 2]
-      }
-    });
-  }
+  // ──────────────── NOTA: PREDIOS APROXIMADOS ────────────────
+  // Los predios sin geometría exacta del catastro NO se renderizan en el mapa
+  // para evitar rectángulos placeholder solapados. Sí aparecen en la tabla
+  // de datos y en los conteos de KPIs.
 
   // ──────────────── INTERACTIVIDAD ────────────────
 
@@ -288,15 +261,8 @@ function setupMapLayers() {
     showPredioPopup(e.features[0].properties, [e.lngLat.lng, e.lngLat.lat]);
   });
 
-  state.map.on('click', 'predios-approx-fill', (e) => {
-    if (!e.features || !e.features.length) return;
-    showPredioPopup(e.features[0].properties, [e.lngLat.lng, e.lngLat.lat]);
-  });
-
-  ['predios-polygons', 'predios-approx-fill'].forEach(layerId => {
-    state.map.on('mouseenter', layerId, () => { state.map.getCanvas().style.cursor = 'pointer'; });
-    state.map.on('mouseleave', layerId, () => { state.map.getCanvas().style.cursor = ''; });
-  });
+  state.map.on('mouseenter', 'predios-polygons', () => { state.map.getCanvas().style.cursor = 'pointer'; });
+  state.map.on('mouseleave', 'predios-polygons', () => { state.map.getCanvas().style.cursor = ''; });
 }
 
 
@@ -385,7 +351,8 @@ function updateMapSource() {
   const countLabel = document.getElementById('legend-count-label');
   if (countLabel) {
     const total = exactFeatures.length + approxFeatures.length;
-    countLabel.textContent = `${total.toLocaleString()} predios (${exactFeatures.length.toLocaleString()} exactos, ${approxFeatures.length.toLocaleString()} aprox.)`;
+    const approxNote = approxFeatures.length > 0 ? ` (+${approxFeatures.length.toLocaleString()} sin coord. exacta)` : '';
+    countLabel.textContent = `${exactFeatures.length.toLocaleString()} predios en mapa${approxNote}`;
   }
 
   if (skippedCount > 0) {
