@@ -156,6 +156,7 @@ function initMap() {
  * Configurar capas de polígonos y geometría predial en Mapbox
  */
 function setupMapLayers() {
+  // Fuente A: predios con geometría exacta del catastro (polígonos reales)
   if (!state.map.getSource('predios-source')) {
     state.map.addSource('predios-source', {
       type: 'geojson',
@@ -163,9 +164,17 @@ function setupMapLayers() {
     });
   }
 
-  // 1. Capa de Relleno del Polígono Predial (Fill)
-  // Los predios con is_exact_lot=1 (shapefile real) se muestran con mayor opacidad
-  // Los predios con is_exact_lot=0 (aproximados por parroquia) son más transparentes
+  // Fuente B: predios con ubicación aproximada (centroide de parroquia)
+  if (!state.map.getSource('predios-approx-source')) {
+    state.map.addSource('predios-approx-source', {
+      type: 'geojson',
+      data: { type: 'FeatureCollection', features: [] }
+    });
+  }
+
+  // ──────────────── CAPAS PARA PREDIOS EXACTOS (polígonos del shapefile) ────────────────
+
+  // 1. Relleno del polígono
   if (!state.map.getLayer('predios-polygons')) {
     state.map.addLayer({
       id: 'predios-polygons',
@@ -173,25 +182,23 @@ function setupMapLayers() {
       source: 'predios-source',
       paint: {
         'fill-color': [
-          'match',
-          ['get', 'fase'],
-          1, '#06b6d4',  // Fase 1 (EC): Cyan
-          2, '#f59e0b',  // Fase 2 (AZ): Ámbar
-          3, '#10b981',  // Fase 3 (AMC): Verde esmeralda
+          'match', ['get', 'fase'],
+          1, '#06b6d4',
+          2, '#f59e0b',
+          3, '#10b981',
           '#38bdf8'
         ],
         'fill-opacity': [
           'interpolate', ['linear'], ['zoom'],
-          9,  ['case', ['==', ['get', 'is_exact_lot'], 1], 0.55, 0.22],
-          13, ['case', ['==', ['get', 'is_exact_lot'], 1], 0.70, 0.32],
-          16, ['case', ['==', ['get', 'is_exact_lot'], 1], 0.85, 0.42]
+          9,  0.50,
+          13, 0.65,
+          16, 0.82
         ]
       }
     });
   }
 
-  // 2. Capa de Contorno / Vértices Geométricos (Line)
-  // Los predios exactos tienen borde sólido; los aproximados tienen borde punteado/suave
+  // 2. Contorno / borde sólido
   if (!state.map.getLayer('predios-outline')) {
     state.map.addLayer({
       id: 'predios-outline',
@@ -199,8 +206,7 @@ function setupMapLayers() {
       source: 'predios-source',
       paint: {
         'line-color': [
-          'match',
-          ['get', 'fase'],
+          'match', ['get', 'fase'],
           1, '#67e8f9',
           2, '#fde047',
           3, '#6ee7b7',
@@ -208,33 +214,24 @@ function setupMapLayers() {
         ],
         'line-width': [
           'interpolate', ['linear'], ['zoom'],
-          10, ['case', ['==', ['get', 'is_exact_lot'], 1], 1.0, 0.7],
-          13, ['case', ['==', ['get', 'is_exact_lot'], 1], 1.8, 1.2],
-          16, ['case', ['==', ['get', 'is_exact_lot'], 1], 2.8, 1.8]
+          10, 1.0,
+          13, 1.8,
+          16, 2.8
         ],
-        'line-opacity': [
-          'case', ['==', ['get', 'is_exact_lot'], 1], 0.95, 0.55
-        ],
-        'line-dasharray': [
-          'case', ['==', ['get', 'is_exact_lot'], 1],
-          ['literal', [1, 0]],       // sólido
-          ['literal', [3, 2]]        // punteado para aproximados
-        ]
+        'line-opacity': 0.95
       }
     });
   }
 
-  // 3. Resplandor exterior (Glow suave) - solo en predios exactos del shapefile
+  // 3. Resplandor exterior (glow)
   if (!state.map.getLayer('predios-glow')) {
     state.map.addLayer({
       id: 'predios-glow',
       type: 'line',
       source: 'predios-source',
-      filter: ['==', ['get', 'is_exact_lot'], 1],
       paint: {
         'line-color': [
-          'match',
-          ['get', 'fase'],
+          'match', ['get', 'fase'],
           1, '#06b6d4',
           2, '#f59e0b',
           3, '#10b981',
@@ -246,122 +243,172 @@ function setupMapLayers() {
           15, 4.5,
           18, 7.0
         ],
-        'line-opacity': 0.30,
+        'line-opacity': 0.28,
         'line-blur': 2
       }
     });
   }
 
-  // Clic en Polígono -> Mostrar Popup Ficha Técnica
+  // ──────────────── CAPAS PARA PREDIOS APROXIMADOS (círculos de punto) ────────────────
+
+  // 4. Círculo exterior (halo de color)
+  if (!state.map.getLayer('predios-approx-halo')) {
+    state.map.addLayer({
+      id: 'predios-approx-halo',
+      type: 'circle',
+      source: 'predios-approx-source',
+      paint: {
+        'circle-color': [
+          'match', ['get', 'fase'],
+          1, '#06b6d4',
+          2, '#f59e0b',
+          3, '#10b981',
+          '#38bdf8'
+        ],
+        'circle-radius': [
+          'interpolate', ['linear'], ['zoom'],
+          10, 5,
+          14, 8,
+          17, 12
+        ],
+        'circle-opacity': 0.18,
+        'circle-blur': 1
+      }
+    });
+  }
+
+  // 5. Círculo interior (punto principal)
+  if (!state.map.getLayer('predios-approx-dot')) {
+    state.map.addLayer({
+      id: 'predios-approx-dot',
+      type: 'circle',
+      source: 'predios-approx-source',
+      paint: {
+        'circle-color': [
+          'match', ['get', 'fase'],
+          1, '#06b6d4',
+          2, '#f59e0b',
+          3, '#10b981',
+          '#38bdf8'
+        ],
+        'circle-radius': [
+          'interpolate', ['linear'], ['zoom'],
+          10, 3,
+          14, 5,
+          17, 7
+        ],
+        'circle-opacity': 0.80,
+        'circle-stroke-width': 1.5,
+        'circle-stroke-color': '#ffffff',
+        'circle-stroke-opacity': 0.60
+      }
+    });
+  }
+
+  // ──────────────── INTERACTIVIDAD ────────────────
+
+  // Clic en polígono exacto
   state.map.on('click', 'predios-polygons', (e) => {
     if (!e.features || !e.features.length) return;
-    const feat = e.features[0];
-    const props = feat.properties;
-    const coordinates = [e.lngLat.lng, e.lngLat.lat];
-    showPredioPopup(props, coordinates);
+    showPredioPopup(e.features[0].properties, [e.lngLat.lng, e.lngLat.lat]);
   });
 
-  // Cursor interactivo sobre polígonos
-  state.map.on('mouseenter', 'predios-polygons', () => { 
-    state.map.getCanvas().style.cursor = 'pointer'; 
+  // Clic en punto aproximado
+  state.map.on('click', 'predios-approx-dot', (e) => {
+    if (!e.features || !e.features.length) return;
+    showPredioPopup(e.features[0].properties, [e.lngLat.lng, e.lngLat.lat]);
   });
-  state.map.on('mouseleave', 'predios-polygons', () => { 
-    state.map.getCanvas().style.cursor = ''; 
+
+  // Cursor interactivo
+  ['predios-polygons', 'predios-approx-dot'].forEach(layerId => {
+    state.map.on('mouseenter', layerId, () => { state.map.getCanvas().style.cursor = 'pointer'; });
+    state.map.on('mouseleave', layerId, () => { state.map.getCanvas().style.cursor = ''; });
   });
 }
+
+
 
 /**
  * Convierte los proyectos filtrados a GeoJSON y actualiza el mapa.
  * Solo incluye predios con coordenadas válidas dentro del DMQ.
  */
 function updateMapSource() {
-  if (!state.mapLoaded || !state.map.getSource('predios-source')) return;
+  if (!state.mapLoaded) return;
+  if (!state.map.getSource('predios-source') || !state.map.getSource('predios-approx-source')) return;
 
-  let exactCount = 0;
-  let approxCount = 0;
+  const exactFeatures = [];
+  const approxFeatures = [];
   let skippedCount = 0;
 
-  const features = state.filteredProjects
-    .filter(p => {
-      // Validar que tenga coordenadas
-      if (!p.lat || !p.lng) { skippedCount++; return false; }
-      // Validar que las coordenadas estén dentro del DMQ
-      if (!isWithinQuitoBounds(p.lat, p.lng)) { skippedCount++; return false; }
-      // Si tiene geom, validar que el primer vértice también esté en el DMQ
-      if (p.geom && p.geom.coordinates && p.geom.coordinates[0] && p.geom.coordinates[0].length > 0) {
-        const [firstLng, firstLat] = p.geom.coordinates[0][0];
-        if (!isWithinQuitoBounds(firstLat, firstLng)) { skippedCount++; return false; }
-      }
-      return true;
-    })
-    .map(p => {
-      const isExact = p.is_exact_lot === true;
-      if (isExact) exactCount++; else approxCount++;
+  for (const p of state.filteredProjects) {
+    // Validar coordenadas dentro del DMQ
+    if (!p.lat || !p.lng || !isWithinQuitoBounds(p.lat, p.lng)) { skippedCount++; continue; }
 
-      // Calcular centroide a partir del polígono si está disponible
-      let centerLng = p.lng;
-      let centerLat = p.lat;
-      if (p.geom) {
-        const centroid = polygonCentroid(p.geom);
-        if (centroid && isWithinQuitoBounds(centroid.lat, centroid.lng)) {
-          centerLng = centroid.lng;
-          centerLat = centroid.lat;
-        }
-      }
+    // Construir propiedades comunes
+    const props = {
+      predio: p.predio,
+      fase: p.fase,
+      is_exact_lot: p.is_exact_lot ? 1 : 0,
+      tipo_licencia: p.tipo_licencia,
+      nombre_proyecto: p.nombre_proyecto || 'Sin nombre registrado',
+      propietario: p.propietario || 'Sin propietario',
+      profesional: p.profesional || 'No especificado',
+      ad_zonal: p.ad_zonal || 'Sin zonal',
+      parroquia: p.parroquia || 'Sin parroquia',
+      entidad_colaboradora: p.entidad_colaboradora || 'No asignada',
+      clave_catastral: p.clave_catastral || '',
+      fecha_emision_ec: p.fecha_emision_ec || '',
+      fecha_inicio_az: p.fecha_inicio_az || '',
+      fecha_emision_az: p.fecha_emision_az || '',
+      dias_transicion: p.dias_transicion || '',
+      dias_ejecucion_az: p.dias_ejecucion_az || '',
+      estado_tramite: p.estado_tramite || '',
+      amc_registro: p.amc_registro || '',
+      amc_resultado: p.amc_resultado || '',
+      area_bruta: p.area_bruta || 0,
+      year: p.year || 2024,
+      center_lng: p.lng,
+      center_lat: p.lat
+    };
 
-      return {
+    if (p.is_exact_lot === true && p.geom) {
+      // Validar primer vértice del polígono
+      const firstRing = p.geom.coordinates && p.geom.coordinates[0];
+      if (firstRing && firstRing.length > 0) {
+        const [fLng, fLat] = firstRing[0];
+        if (!isWithinQuitoBounds(fLat, fLng)) { skippedCount++; continue; }
+      }
+      // Calcular centroide real para el flyTo
+      const centroid = polygonCentroid(p.geom);
+      if (centroid && isWithinQuitoBounds(centroid.lat, centroid.lng)) {
+        props.center_lng = centroid.lng;
+        props.center_lat = centroid.lat;
+      }
+      // Agregar como polígono exacto
+      exactFeatures.push({ type: 'Feature', geometry: p.geom, properties: props });
+    } else {
+      // Predio aproximado → punto en la coordenada estimada
+      approxFeatures.push({
         type: 'Feature',
-        geometry: p.geom || {
-          type: 'Polygon',
-          coordinates: [
-            [
-              [p.lng - 0.00016, p.lat - 0.00016],
-              [p.lng + 0.00016, p.lat - 0.00016],
-              [p.lng + 0.00016, p.lat + 0.00016],
-              [p.lng - 0.00016, p.lat + 0.00016],
-              [p.lng - 0.00016, p.lat - 0.00016]
-            ]
-          ]
-        },
-        properties: {
-          predio: p.predio,
-          fase: p.fase,
-          is_exact_lot: isExact ? 1 : 0,
-          tipo_licencia: p.tipo_licencia,
-          nombre_proyecto: p.nombre_proyecto || 'Sin nombre registrado',
-          propietario: p.propietario || 'Sin propietario',
-          profesional: p.profesional || 'No especificado',
-          ad_zonal: p.ad_zonal || 'Sin zonal',
-          parroquia: p.parroquia || 'Sin parroquia',
-          entidad_colaboradora: p.entidad_colaboradora || 'No asignada',
-          clave_catastral: p.clave_catastral || '',
-          fecha_emision_ec: p.fecha_emision_ec || '',
-          fecha_inicio_az: p.fecha_inicio_az || '',
-          fecha_emision_az: p.fecha_emision_az || '',
-          dias_transicion: p.dias_transicion || '',
-          dias_ejecucion_az: p.dias_ejecucion_az || '',
-          estado_tramite: p.estado_tramite || '',
-          amc_registro: p.amc_registro || '',
-          amc_resultado: p.amc_resultado || '',
-          area_bruta: p.area_bruta || 0,
-          year: p.year || 2024,
-          center_lng: centerLng,
-          center_lat: centerLat
-        }
-      };
-    });
+        geometry: { type: 'Point', coordinates: [p.lng, p.lat] },
+        properties: props
+      });
+    }
+  }
 
   state.map.getSource('predios-source').setData({
-    type: 'FeatureCollection',
-    features: features
+    type: 'FeatureCollection', features: exactFeatures
+  });
+  state.map.getSource('predios-approx-source').setData({
+    type: 'FeatureCollection', features: approxFeatures
   });
 
   const countLabel = document.getElementById('legend-count-label');
   if (countLabel) {
-    countLabel.textContent = `${features.length.toLocaleString()} predios (${exactCount.toLocaleString()} exactos, ${approxCount.toLocaleString()} aprox.)`;
+    const total = exactFeatures.length + approxFeatures.length;
+    countLabel.textContent = `${total.toLocaleString()} predios (${exactFeatures.length.toLocaleString()} exactos, ${approxFeatures.length.toLocaleString()} aprox.)`;
   }
 
-  // Log de validación para depuración
   if (skippedCount > 0) {
     console.warn(`[Coords] ${skippedCount} predios omitidos por coordenadas fuera del DMQ o inválidas.`);
   }
