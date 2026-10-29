@@ -350,9 +350,8 @@ function updateMapSource() {
 
   const countLabel = document.getElementById('legend-count-label');
   if (countLabel) {
-    const total = exactFeatures.length + approxFeatures.length;
-    const approxNote = approxFeatures.length > 0 ? ` (+${approxFeatures.length.toLocaleString()} sin coord. exacta)` : '';
-    countLabel.textContent = `${exactFeatures.length.toLocaleString()} predios en mapa${approxNote}`;
+    const total = state.filteredProjects.length;
+    countLabel.textContent = `${total.toLocaleString()} predios | ${exactFeatures.length.toLocaleString()} con polígono en mapa`;
   }
 
   if (skippedCount > 0) {
