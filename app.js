@@ -290,8 +290,6 @@ function updateMapSource() {
       is_exact_lot: p.is_exact_lot ? 1 : 0,
       tipo_licencia: p.tipo_licencia,
       nombre_proyecto: p.nombre_proyecto || 'Sin nombre registrado',
-      propietario: p.propietario || 'Sin propietario',
-      profesional: p.profesional || 'No especificado',
       ad_zonal: p.ad_zonal || 'Sin zonal',
       parroquia: p.parroquia || 'Sin parroquia',
       entidad_colaboradora: p.entidad_colaboradora || 'No asignada',
@@ -381,7 +379,7 @@ function showPredioPopup(props, coordinates) {
       </div>
       <div class="popup-body">
         <h4 class="popup-project-title">${props.nombre_proyecto}</h4>
-        <p class="popup-owner"><strong>Propietario:</strong> ${props.propietario}</p>
+        <p class="popup-owner"><strong>Proyecto:</strong> ${props.nombre_proyecto}</p>
         ${coordBadge}
 
         <!-- Stepper -->
@@ -468,7 +466,7 @@ window.openPredioModal = function(predioNum) {
         <h4 style="font-family: var(--font-heading); font-size: 1.1rem; color: #fff; margin-bottom: 4px;">
           ${p.nombre_proyecto || 'Sin Nombre Registrado'}
         </h4>
-        <p style="color: #94a3b8; font-size: 0.85rem;">Propietario: <strong style="color: #fff;">${p.propietario}</strong></p>
+        <p style="color: #94a3b8; font-size: 0.85rem;">Parroquia: <strong style="color: #fff;">${p.parroquia || 'N/A'}</strong></p>
       </div>
 
       <div class="dmc-section-title">Línea de Tiempo del Trámite</div>
@@ -500,7 +498,6 @@ window.openPredioModal = function(predioNum) {
         <div class="dmc-field"><span class="dmc-lbl">Clave Catastral:</span><span class="dmc-val">${p.clave_catastral || 'N/A'}</span></div>
         <div class="dmc-field"><span class="dmc-lbl">Parroquia:</span><span class="dmc-val">${p.parroquia || 'N/A'}</span></div>
         <div class="dmc-field"><span class="dmc-lbl">Área Bruta:</span><span class="dmc-val">${p.area_bruta ? p.area_bruta.toLocaleString() + ' m²' : 'N/A'}</span></div>
-        <div class="dmc-field"><span class="dmc-lbl">Profesional a Cargo:</span><span class="dmc-val">${p.profesional || 'N/A'}</span></div>
         <div class="dmc-field"><span class="dmc-lbl">Coordenadas WGS84:</span><span class="dmc-val">${p.lat.toFixed(5)}, ${p.lng.toFixed(5)}</span></div>
         <div class="dmc-field"><span class="dmc-lbl">Tiempo Transición (EC&rarr;AZ):</span><span class="dmc-val" style="color:#f59e0b">${p.dias_transicion ? p.dias_transicion + ' días' : 'Directo / No registrado'}</span></div>
       </div>
@@ -615,8 +612,7 @@ function applyFilters() {
       const q = normStr(state.filters.query);
       const matchPredio = String(p.predio).toLowerCase().includes(q);
       const matchProj = normStr(p.nombre_proyecto).includes(q);
-      const matchProp = normStr(p.propietario).includes(q);
-      if (!matchPredio && !matchProj && !matchProp) return false;
+      if (!matchPredio && !matchProj) return false;
     }
 
     return true;
@@ -955,7 +951,6 @@ function populateTable() {
         <td>${faseBadge}</td>
         <td><span style="font-weight:600">${p.tipo_licencia}</span></td>
         <td style="max-width:240px; overflow:hidden; text-overflow:ellipsis" title="${p.nombre_proyecto}">${p.nombre_proyecto || 'S/N'}</td>
-        <td style="max-width:200px; overflow:hidden; text-overflow:ellipsis" title="${p.propietario}">${p.propietario || 'S/N'}</td>
         <td>${p.ad_zonal ? p.ad_zonal.replace('Administración Zonal ', 'AZ ') : '-'}</td>
         <td>${p.parroquia || '-'}</td>
         <td>${p.entidad_colaboradora || '-'}</td>
@@ -983,7 +978,7 @@ function exportFilteredToCSV() {
   }
 
   const headers = [
-    'Predio', 'Fase', 'Tipo_Licencia', 'Proyecto', 'Propietario', 'Profesional',
+    'Predio', 'Fase', 'Tipo_Licencia', 'Proyecto',
     'Adm_Zonal', 'Parroquia', 'Entidad_Colaboradora', 'Clave_Catastral',
     'Fecha_Emision_EC', 'Fecha_Inicio_AZ', 'Fecha_Emision_AZ', 'Dias_Transicion',
     'Dias_Ejecucion_AZ', 'AMC_Certificado', 'AMC_Resultado', 'Area_Bruta', 'Latitud', 'Longitud'
@@ -994,8 +989,6 @@ function exportFilteredToCSV() {
     p.fase,
     `"${p.tipo_licencia}"`,
     `"${(p.nombre_proyecto || '').replace(/"/g, '""')}"`,
-    `"${(p.propietario || '').replace(/"/g, '""')}"`,
-    `"${(p.profesional || '').replace(/"/g, '""')}"`,
     `"${p.ad_zonal || ''}"`,
     `"${p.parroquia || ''}"`,
     `"${p.entidad_colaboradora || ''}"`,
