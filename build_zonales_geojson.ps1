@@ -36,17 +36,19 @@ for ($i = 0; $i -lt $numRecords; $i++) {
     $dbfRows += $row
 }
 
+$o = [char]0x00F3
+$a = [char]0x00E1
 $zonalDict = @{
-    "AZCHA" = @{ Name = "Chocó Andino"; Full = "Administración Zonal Chocó Andino"; Alias = "Administración Zonal Chocó Andino"; Centroid = @(-78.68, 0.08); Color = "#10b981" }
-    "AZEE"  = @{ Name = "Eugenio Espejo"; Full = "Administración Zonal Eugenio Espejo"; Alias = "Administración Zonal Eugenio Espejo"; Centroid = @(-78.44, -0.12); Color = "#0284c7" }
-    "AZCH"  = @{ Name = "Los Chillos"; Full = "Administración Zonal Los Chillos"; Alias = "Administración Zonal Los Chillos"; Centroid = @(-78.43, -0.32); Color = "#f59e0b" }
-    "AZQ"   = @{ Name = "Quitumbe"; Full = "Administración Zonal Quitumbe"; Alias = "Administración Zonal Quitumbe"; Centroid = @(-78.55, -0.34); Color = "#8b5cf6" }
-    "AZCA"  = @{ Name = "Calderón"; Full = "Administración Zonal Calderón"; Alias = "Administración Zonal Calderón"; Centroid = @(-78.40, -0.05); Color = "#ec4899" }
-    "AZMS"  = @{ Name = "Manuela Sáenz"; Full = "Administración Zonal Manuela Sáenz"; Alias = "Administración Zonal Centro"; Centroid = @(-78.51, -0.22); Color = "#eab308" }
-    "AZT"   = @{ Name = "Tumbaco"; Full = "Administración Zonal Tumbaco"; Alias = "Administración Zonal Tumbaco"; Centroid = @(-78.33, -0.22); Color = "#06b6d4" }
-    "AZLM"  = @{ Name = "La Mariscal"; Full = "Administración Zonal La Mariscal"; Alias = "Administración Zonal La Mariscal"; Centroid = @(-78.49, -0.203); Color = "#14b8a6" }
-    "AZLD"  = @{ Name = "La Delicia"; Full = "Administración Zonal La Delicia"; Alias = "Administración Zonal La Delicia"; Centroid = @(-78.52, -0.04); Color = "#6366f1" }
-    "AZEA"  = @{ Name = "Eloy Alfaro"; Full = "Administración Zonal Eloy Alfaro"; Alias = "Administración Zonal Eloy Alfaro"; Centroid = @(-78.55, -0.26); Color = "#f97316" }
+    "AZCHA" = @{ Name = "Choc${o} Andino"; Full = "Administraci${o}n Zonal Choc${o} Andino"; Alias = "Administraci${o}n Zonal Choc${o} Andino"; Centroid = @(-78.680, 0.080); Color = "#10b981" }
+    "AZEE"  = @{ Name = "Eugenio Espejo"; Full = "Administraci${o}n Zonal Eugenio Espejo"; Alias = "Administraci${o}n Zonal Eugenio Espejo"; Centroid = @(-78.475, -0.165); Color = "#0284c7" }
+    "AZCH"  = @{ Name = "Los Chillos"; Full = "Administraci${o}n Zonal Los Chillos"; Alias = "Administraci${o}n Zonal Los Chillos"; Centroid = @(-78.460, -0.280); Color = "#f59e0b" }
+    "AZQ"   = @{ Name = "Quitumbe"; Full = "Administraci${o}n Zonal Quitumbe"; Alias = "Administraci${o}n Zonal Quitumbe"; Centroid = @(-78.552, -0.312); Color = "#8b5cf6" }
+    "AZCA"  = @{ Name = "Calder${o}n"; Full = "Administraci${o}n Zonal Calder${o}n"; Alias = "Administraci${o}n Zonal Calder${o}n"; Centroid = @(-78.435, -0.098); Color = "#ec4899" }
+    "AZMS"  = @{ Name = "Manuela S${a}enz"; Full = "Administraci${o}n Zonal Manuela S${a}enz"; Alias = "Administraci${o}n Zonal Centro"; Centroid = @(-78.508, -0.220); Color = "#eab308" }
+    "AZT"   = @{ Name = "Tumbaco"; Full = "Administraci${o}n Zonal Tumbaco"; Alias = "Administraci${o}n Zonal Tumbaco"; Centroid = @(-78.390, -0.205); Color = "#06b6d4" }
+    "AZLM"  = @{ Name = "La Mariscal"; Full = "Administraci${o}n Zonal La Mariscal"; Alias = "Administraci${o}n Zonal La Mariscal"; Centroid = @(-78.492, -0.202); Color = "#14b8a6" }
+    "AZLD"  = @{ Name = "La Delicia"; Full = "Administraci${o}n Zonal La Delicia"; Alias = "Administraci${o}n Zonal La Delicia"; Centroid = @(-78.495, -0.115); Color = "#6366f1" }
+    "AZEA"  = @{ Name = "Eloy Alfaro"; Full = "Administraci${o}n Zonal Eloy Alfaro"; Alias = "Administraci${o}n Zonal Eloy Alfaro"; Centroid = @(-78.530, -0.258); Color = "#f97316" }
 }
 
 # 2. Parse SHP
@@ -177,7 +179,7 @@ for ($recIdx = 0; $recIdx -lt $numRecords; $recIdx++) {
     $codZonal = $dbfData["cod_adm_zo"]
     $info = $zonalDict[$codZonal]
     $zName = if ($info) { $info.Name } else { $dbfData["adm_zonal"] }
-    $zFull = if ($info) { $info.Full } else { "Administración Zonal $zName" }
+    $zFull = if ($info) { $info.Full } else { "Administraci${o}n Zonal $zName" }
     $zAlias = if ($info) { $info.Alias } else { $zFull }
     $zCent = if ($info) { $info.Centroid } else { @([Math]::Round(($xmin + $xmax) / 2.0, 6), [Math]::Round(($ymin + $ymax) / 2.0, 6)) }
     $zColor = if ($info) { $info.Color } else { "#38bdf8" }
