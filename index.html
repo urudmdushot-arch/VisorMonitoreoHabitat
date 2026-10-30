@@ -1,29 +1,35 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Monitoreo de la Aplicación de la Normativa Urbanística a través del Licenciamiento y la Dinámica Territorial en el Distrito Metropolitano de Quito</title>
-  <meta name="description" content="Plataforma interactiva de monitoreo y seguimiento del flujo de licenciamiento urbano (Entidades Colaboradoras -> Administraciones Zonales -> AMC) en el Distrito Metropolitano de Quito.">
-  
+  <title>Monitoreo de la Aplicación de la Normativa Urbanística a través del Licenciamiento y la Dinámica Territorial en
+    el Distrito Metropolitano de Quito</title>
+  <meta name="description"
+    content="Plataforma interactiva de monitoreo y seguimiento del flujo de licenciamiento urbano (Entidades Colaboradoras -> Administraciones Zonales -> AMC) en el Distrito Metropolitano de Quito.">
+
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  
+  <link
+    href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap"
+    rel="stylesheet">
+
   <!-- Mapbox GL JS -->
   <link href="https://api.mapbox.com/mapbox-gl-js/v3.2.0/mapbox-gl.css" rel="stylesheet">
   <script src="https://api.mapbox.com/mapbox-gl-js/v3.2.0/mapbox-gl.js"></script>
-  
+
   <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
-  
+
   <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
-  
+
   <!-- Styles -->
   <link rel="stylesheet" href="index.css">
 </head>
+
 <body class="dark-theme">
   <!-- Top App Navigation -->
   <header class="app-header" id="app-header">
@@ -32,7 +38,8 @@
         <i data-lucide="layers"></i>
       </div>
       <div class="brand-text">
-        <h1>Monitoreo de la Aplicación de la Normativa Urbanística a través del Licenciamiento y la Dinámica Territorial en el Distrito Metropolitano de Quito</h1>
+        <h1>Monitoreo de la Aplicación de la Normativa Urbanística a través del Licenciamiento y la Dinámica Territorial
+          en el Distrito Metropolitano de Quito</h1>
         <p>Flujo: Entidades Colaboradoras &rarr; Administraciones Zonales &rarr; AMC</p>
       </div>
     </div>
@@ -41,7 +48,8 @@
     <div class="header-search">
       <div class="search-input-wrapper">
         <i data-lucide="search" class="search-icon"></i>
-        <input type="text" id="global-search-input" placeholder="Buscar por N° de predio o nombre de proyecto..." autocomplete="off">
+        <input type="text" id="global-search-input" placeholder="Buscar por N° de predio o nombre de proyecto..."
+          autocomplete="off">
         <button id="clear-search-btn" class="clear-search-btn hidden" title="Limpiar búsqueda">
           <i data-lucide="x"></i>
         </button>
@@ -212,16 +220,26 @@
               <label class="cl-item cl-all-item">
                 <input type="checkbox" class="cl-all" data-group="zonal" checked> <span>Todas</span>
               </label>
-              <label class="cl-item"><input type="checkbox" class="cl-option" data-group="zonal" value="Administración Zonal Tumbaco"> <span>AZ Tumbaco</span></label>
-              <label class="cl-item"><input type="checkbox" class="cl-option" data-group="zonal" value="Administración Zonal Los Chillos"> <span>AZ Los Chillos</span></label>
-              <label class="cl-item"><input type="checkbox" class="cl-option" data-group="zonal" value="Administración Zonal Quitumbe"> <span>AZ Quitumbe</span></label>
-              <label class="cl-item"><input type="checkbox" class="cl-option" data-group="zonal" value="Administración Zonal Eugenio Espejo"> <span>AZ Eugenio Espejo</span></label>
-              <label class="cl-item"><input type="checkbox" class="cl-option" data-group="zonal" value="Administración Zonal La Delicia"> <span>AZ La Delicia</span></label>
-              <label class="cl-item"><input type="checkbox" class="cl-option" data-group="zonal" value="Administración Zonal Calderón"> <span>AZ Calderón</span></label>
-              <label class="cl-item"><input type="checkbox" class="cl-option" data-group="zonal" value="Administración Zonal Eloy Alfaro"> <span>AZ Eloy Alfaro</span></label>
-              <label class="cl-item"><input type="checkbox" class="cl-option" data-group="zonal" value="Administración Zonal Centro"> <span>AZ Centro</span></label>
-              <label class="cl-item"><input type="checkbox" class="cl-option" data-group="zonal" value="Administración Zonal La Mariscal"> <span>AZ La Mariscal</span></label>
-              <label class="cl-item"><input type="checkbox" class="cl-option" data-group="zonal" value="Administración Zonal Chocó Andino"> <span>AZ Chocó Andino</span></label>
+              <label class="cl-item"><input type="checkbox" class="cl-option" data-group="zonal"
+                  value="Administración Zonal Tumbaco"> <span>AZ Tumbaco</span></label>
+              <label class="cl-item"><input type="checkbox" class="cl-option" data-group="zonal"
+                  value="Administración Zonal Los Chillos"> <span>AZ Los Chillos</span></label>
+              <label class="cl-item"><input type="checkbox" class="cl-option" data-group="zonal"
+                  value="Administración Zonal Quitumbe"> <span>AZ Quitumbe</span></label>
+              <label class="cl-item"><input type="checkbox" class="cl-option" data-group="zonal"
+                  value="Administración Zonal Eugenio Espejo"> <span>AZ Eugenio Espejo</span></label>
+              <label class="cl-item"><input type="checkbox" class="cl-option" data-group="zonal"
+                  value="Administración Zonal La Delicia"> <span>AZ La Delicia</span></label>
+              <label class="cl-item"><input type="checkbox" class="cl-option" data-group="zonal"
+                  value="Administración Zonal Calderón"> <span>AZ Calderón</span></label>
+              <label class="cl-item"><input type="checkbox" class="cl-option" data-group="zonal"
+                  value="Administración Zonal Eloy Alfaro"> <span>AZ Eloy Alfaro</span></label>
+              <label class="cl-item"><input type="checkbox" class="cl-option" data-group="zonal"
+                  value="Administración Zonal Centro"> <span>AZ Centro</span></label>
+              <label class="cl-item"><input type="checkbox" class="cl-option" data-group="zonal"
+                  value="Administración Zonal La Mariscal"> <span>AZ La Mariscal</span></label>
+              <label class="cl-item"><input type="checkbox" class="cl-option" data-group="zonal"
+                  value="Administración Zonal Chocó Andino"> <span>AZ Chocó Andino</span></label>
             </div>
           </div>
         </div>
@@ -238,8 +256,10 @@
               <label class="cl-item cl-all-item">
                 <input type="checkbox" class="cl-all" data-group="entidad" checked> <span>Todas</span>
               </label>
-              <label class="cl-item"><input type="checkbox" class="cl-option" data-group="entidad" value="Colegio de Arquitectos"> <span>Colegio de Arquitectos</span></label>
-              <label class="cl-item"><input type="checkbox" class="cl-option" data-group="entidad" value="Desintecsa"> <span>Desintecsa</span></label>
+              <label class="cl-item"><input type="checkbox" class="cl-option" data-group="entidad"
+                  value="Colegio de Arquitectos"> <span>Colegio de Arquitectos</span></label>
+              <label class="cl-item"><input type="checkbox" class="cl-option" data-group="entidad" value="Desintecsa">
+                <span>Desintecsa</span></label>
             </div>
           </div>
         </div>
@@ -256,10 +276,14 @@
               <label class="cl-item cl-all-item">
                 <input type="checkbox" class="cl-all" data-group="anio" checked> <span>Todos</span>
               </label>
-              <label class="cl-item"><input type="checkbox" class="cl-option" data-group="anio" value="2026"> <span>2026</span></label>
-              <label class="cl-item"><input type="checkbox" class="cl-option" data-group="anio" value="2025"> <span>2025</span></label>
-              <label class="cl-item"><input type="checkbox" class="cl-option" data-group="anio" value="2024"> <span>2024</span></label>
-              <label class="cl-item"><input type="checkbox" class="cl-option" data-group="anio" value="2023"> <span>2023</span></label>
+              <label class="cl-item"><input type="checkbox" class="cl-option" data-group="anio" value="2026">
+                <span>2026</span></label>
+              <label class="cl-item"><input type="checkbox" class="cl-option" data-group="anio" value="2025">
+                <span>2025</span></label>
+              <label class="cl-item"><input type="checkbox" class="cl-option" data-group="anio" value="2024">
+                <span>2024</span></label>
+              <label class="cl-item"><input type="checkbox" class="cl-option" data-group="anio" value="2023">
+                <span>2023</span></label>
             </div>
           </div>
         </div>
@@ -308,6 +332,16 @@
             <span class="legend-badge" id="leg-count-f3">401</span>
           </div>
         </div>
+        <!-- Toggle Capa Límites Zonales -->
+        <div class="legend-layer-toggle">
+          <label class="toggle-switch-label" title="Mostrar u ocultar los límites de las Administraciones Zonales">
+            <input type="checkbox" id="toggle-zonales-btn" checked>
+            <span class="toggle-switch-slider"></span>
+            <span class="toggle-switch-text">
+              <i data-lucide="map-pin"></i> Límites Zonales
+            </span>
+          </label>
+        </div>
         <div class="legend-footer">
           <small><i data-lucide="info"></i> Clic en cualquier lote para ver ficha técnica</small>
         </div>
@@ -354,7 +388,8 @@
             <h4>Flujo de Transición por Fase</h4>
             <span class="chart-tag">Embudo Dinámico</span>
           </div>
-          <p class="chart-desc">Comparativa de proyectos que ingresaron, avanzaron a la siguiente fase o se quedaron detenidos.</p>
+          <p class="chart-desc">Comparativa de proyectos que ingresaron, avanzaron a la siguiente fase o se quedaron
+            detenidos.</p>
           <div class="chart-wrapper">
             <canvas id="chart-funnel"></canvas>
           </div>
@@ -412,7 +447,8 @@
             <h4>Tiempos entre Fases (Días)</h4>
             <span class="chart-tag">Lead Time</span>
           </div>
-          <p class="chart-desc">Distribución del tiempo transcurrido desde la certificación en EC hasta el ingreso formal en la Zonal.</p>
+          <p class="chart-desc">Distribución del tiempo transcurrido desde la certificación en EC hasta el ingreso
+            formal en la Zonal.</p>
           <div class="chart-wrapper">
             <canvas id="chart-tiempos"></canvas>
           </div>
@@ -491,8 +527,10 @@
   </div>
 
   <!-- Standalone Data Bundle (permite abrir index.html directamente sin requerir servidor) -->
+  <script src="public/data/zonas_data.js"></script>
   <script src="public/data/licencias_data.js?v=20261029c"></script>
   <!-- App Logic -->
   <script src="app.js"></script>
 </body>
+
 </html>
