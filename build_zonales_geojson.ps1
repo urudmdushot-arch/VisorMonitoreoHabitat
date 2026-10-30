@@ -77,38 +77,43 @@ for ($recIdx = 0; $recIdx -lt $numRecords; $recIdx++) {
     
     $numParts = $br.ReadInt32()
     $numPoints = $br.ReadInt32()
-    $parts = 0..($numParts - 1) | ForEach-Object { $br.ReadInt32() }
     
-    $rawPoints = 0..($numPoints - 1) | ForEach-Object {
-        [PSCustomObject]@{
-            X = [Math]::Round($br.ReadDouble(), 6)
-            Y = [Math]::Round($br.ReadDouble(), 6)
-        }
+    $parts = New-Object int[] $numParts
+    for ($p = 0; $p -lt $numParts; $p++) {
+        $parts[$p] = $br.ReadInt32()
     }
     
-    # Process parts/rings
-    $rings = @()
+    $allX = New-Object double[] $numPoints
+    $allY = New-Object double[] $numPoints
+    for ($i = 0; $i -lt $numPoints; $i++) {
+        $allX[$i] = [Math]::Round($br.ReadDouble(), 6)
+        $allY[$i] = [Math]::Round($br.ReadDouble(), 6)
+    }
+    
+    # Process parts/rings using strongly typed List of double[]
+    $rings = New-Object System.Collections.Generic.List[System.Collections.Generic.List[double[]]]
     for ($p = 0; $p -lt $numParts; $p++) {
         $startIdx = $parts[$p]
         $endIdx = if ($p -lt ($numParts - 1)) { $parts[$p + 1] - 1 } else { $numPoints - 1 }
         
-        $ringPts = @()
+        $ringPts = New-Object System.Collections.Generic.List[double[]]
         $prevX = [double]::NaN
         $prevY = [double]::NaN
         
         for ($i = $startIdx; $i -le $endIdx; $i++) {
-            $pt = $rawPoints[$i]
+            $x = $allX[$i]
+            $y = $allY[$i]
             if ([double]::IsNaN($prevX)) {
-                $ringPts += @($pt.X, $pt.Y)
-                $prevX = $pt.X
-                $prevY = $pt.Y
+                $ringPts.Add([double[]]@($x, $y))
+                $prevX = $x
+                $prevY = $y
             } else {
-                $dx = $pt.X - $prevX
-                $dy = $pt.Y - $prevY
+                $dx = $x - $prevX
+                $dy = $y - $prevY
                 if (($dx * $dx + $dy * $dy) -ge $minDistSq -or $i -eq $endIdx) {
-                    $ringPts += ,@($pt.X, $pt.Y)
-                    $prevX = $pt.X
-                    $prevY = $pt.Y
+                    $ringPts.Add([double[]]@($x, $y))
+                    $prevX = $x
+                    $prevY = $y
                 }
             }
         }
@@ -118,14 +123,15 @@ for ($recIdx = 0; $recIdx -lt $numRecords; $recIdx++) {
             $first = $ringPts[0]
             $last = $ringPts[$ringPts.Count - 1]
             if ($first[0] -ne $last[0] -or $first[1] -ne $last[1]) {
-                $ringPts += ,@($first[0], $first[1])
+                $ringPts.Add([double[]]@($first[0], $first[1]))
             }
-            $rings += ,$ringPts
+            $rings.Add($ringPts)
         }
     }
     
-    $polyList = @()
-    $currentPoly = @()
+    # Classify exterior vs hole rings
+    $polyList = New-Object System.Collections.Generic.List[System.Collections.Generic.List[System.Collections.Generic.List[double[]]]]
+    $currentPoly = New-Object System.Collections.Generic.List[System.Collections.Generic.List[double[]]]
     
     foreach ($r in $rings) {
         $area = 0.0
@@ -138,21 +144,23 @@ for ($recIdx = 0; $recIdx -lt $numRecords; $recIdx++) {
         
         if ($isCW) {
             if ($currentPoly.Count -gt 0) {
-                $polyList += ,$currentPoly
+                $polyList.Add($currentPoly)
             }
-            $currentPoly = @(,$r)
+            $currentPoly = New-Object System.Collections.Generic.List[System.Collections.Generic.List[double[]]]
+            $currentPoly.Add($r)
         } else {
             if ($currentPoly.Count -eq 0) {
-                $currentPoly = @(,$r)
+                $currentPoly.Add($r)
             } else {
-                $currentPoly += ,$r
+                $currentPoly.Add($r)
             }
         }
     }
     if ($currentPoly.Count -gt 0) {
-        $polyList += ,$currentPoly
+        $polyList.Add($currentPoly)
     }
     
+    # Build coordinates array
     $geom = if ($polyList.Count -eq 1) {
         [ordered]@{
             type = "Polygon"
@@ -207,8 +215,8 @@ $geojson = [ordered]@{
     features = $features
 }
 
-# Output to JSON
-$jsonText = $geojson | ConvertTo-Json -Depth 10 -Compress
+# Output to JSON with depth 15
+$jsonText = $geojson | ConvertTo-Json -Depth 15 -Compress
 
 # Save GeoJSON with UTF-8 encoding
 [System.IO.File]::WriteAllText("public/data/administraciones_zonales.geojson", $jsonText, [System.Text.Encoding]::UTF8)
@@ -217,7 +225,17 @@ $jsonText = $geojson | ConvertTo-Json -Depth 10 -Compress
 $jsContent = "window.ZONAS_DATA = $jsonText;"
 [System.IO.File]::WriteAllText("public/data/zonas_data.js", $jsContent, [System.Text.Encoding]::UTF8)
 
-Write-Output "Successfully updated GeoJSON and JS bundle with canonical names and centroids!"
-foreach ($f in $features) {
-    Write-Output " - $($f.id): $($f.properties.nombre_completo) | Centroid: $($f.properties.centroid -join ', ')"
+Write-Output "Successfully updated GeoJSON and JS bundle!"
+
+# VALIDATION TEST
+$testJson = [System.IO.File]::ReadAllText("public/data/zonas_data.js")
+if ($testJson -match "\{\}") {
+    Write-Error "VALIDATION FAILED: Found empty object {} in coordinates!"
+} else {
+    Write-Output "VALIDATION PASSED: No empty objects {} found."
+}
+if ($testJson -match ",\[-?[0-9\.]+,\[") {
+    Write-Error "VALIDATION FAILED: Found unnested coordinates!"
+} else {
+    Write-Output "VALIDATION PASSED: Coordinates structure is valid."
 }

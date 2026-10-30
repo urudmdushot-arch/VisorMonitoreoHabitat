@@ -166,6 +166,23 @@ function setupMapLayers() {
     });
   }
 
+  // Capa para Rótulos / Labels usando los centroides de cada zona
+  if (!state.map.getSource('zonas-centroids-source') && window.ZONAS_DATA && window.ZONAS_DATA.features) {
+    const centroidFeatures = window.ZONAS_DATA.features.map(f => ({
+      type: 'Feature',
+      id: f.id + '_lbl',
+      geometry: {
+        type: 'Point',
+        coordinates: f.properties.centroid
+      },
+      properties: f.properties
+    }));
+    state.map.addSource('zonas-centroids-source', {
+      type: 'geojson',
+      data: { type: 'FeatureCollection', features: centroidFeatures }
+    });
+  }
+
   // 1. Relleno zonal translúcido muy suave (fondo cartográfico)
   if (state.map.getSource('zonas-source') && !state.map.getLayer('zonas-fill')) {
     state.map.addLayer({
@@ -187,12 +204,12 @@ function setupMapLayers() {
           'AZEA',  '#f97316',
           '#38bdf8'
         ],
-        'fill-opacity': 0.04
+        'fill-opacity': 0.08
       }
     });
   }
 
-  // 2. Límites perimetrales de las Administraciones Zonales (línea discontinua elegante)
+  // 2. Límites perimetrales de las Administraciones Zonales (línea sólida y visible)
   if (state.map.getSource('zonas-source') && !state.map.getLayer('zonas-border')) {
     state.map.addLayer({
       id: 'zonas-border',
@@ -215,45 +232,53 @@ function setupMapLayers() {
         ],
         'line-width': [
           'interpolate', ['linear'], ['zoom'],
-          8, 1.0,
-          11, 1.8,
-          14, 2.6
+          8, 1.5,
+          11, 2.2,
+          14, 3.2
         ],
-        'line-dasharray': [4, 2],
-        'line-opacity': 0.70
+        'line-opacity': 0.85
       }
     });
   }
 
   // 3. Rótulos / Etiquetas tipográficas con el nombre de cada Administración Zonal
-  if (state.map.getSource('zonas-source') && !state.map.getLayer('zonas-labels')) {
+  if (state.map.getSource('zonas-centroids-source') && !state.map.getLayer('zonas-labels')) {
     state.map.addLayer({
       id: 'zonas-labels',
       type: 'symbol',
-      source: 'zonas-source',
+      source: 'zonas-centroids-source',
       layout: {
         'text-field': ['concat', 'AZ ', ['get', 'adm_zonal']],
-        'text-font': ['Open Sans Bold', 'Arial Unicode MS Bold'],
         'text-size': [
           'interpolate', ['linear'], ['zoom'],
-          8, 10,
-          10, 12,
-          12, 14,
-          15, 17
+          8, 11,
+          10, 13,
+          12, 15,
+          15, 18
         ],
         'text-transform': 'uppercase',
         'text-letter-spacing': 0.08,
-        'text-max-width': 10
+        'text-allow-overlap': true,
+        'text-ignore-placement': true
       },
       paint: {
-        'text-color': '#e2e8f0',
-        'text-halo-color': 'rgba(11, 17, 32, 0.90)',
-        'text-halo-width': 2.0,
+        'text-color': '#f8fafc',
+        'text-halo-color': 'rgba(15, 23, 42, 0.95)',
+        'text-halo-width': 2.5,
         'text-halo-blur': 1.0,
-        'text-opacity': 0.85
+        'text-opacity': 0.95
       }
     });
   }
+
+  // Sincronizar visibilidad con el botón toggle si ya existe en el DOM
+  const toggleZonalesBtnInit = document.getElementById('toggle-zonales-btn');
+  const initVisibility = (toggleZonalesBtnInit && !toggleZonalesBtnInit.checked) ? 'none' : 'visible';
+  ['zonas-fill', 'zonas-border', 'zonas-labels'].forEach(layerId => {
+    if (state.map.getLayer(layerId)) {
+      state.map.setLayoutProperty(layerId, 'visibility', initVisibility);
+    }
+  });
 
   // Fuente A: predios con geometría exacta del catastro (polígonos reales)
   if (!state.map.getSource('predios-source')) {
