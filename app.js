@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * SISTEMA DE MONITOREO DE LICENCIAS URBANAS (DMQ)
+ * Monitoreo de la Aplicación de la Normativa Urbanística a través del Licenciamiento y la Dinámica Territorial en el Distrito Metropolitano de Quito
  * Lógica de la aplicación: Mapbox GL JS, Chart.js, Filtros Reactivos y Análisis
  * ============================================================================
  */

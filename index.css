@@ -90,14 +90,15 @@ body {
    APP HEADER
    ========================================================================== */
 .app-header {
-  height: var(--header-height);
+  min-height: var(--header-height);
+  height: auto;
   background: rgba(11, 17, 32, 0.92);
   backdrop-filter: blur(16px);
   border-bottom: 1px solid var(--border-light);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 24px;
+  padding: 8px 24px;
   z-index: 100;
   gap: 16px;
   flex-shrink: 0;
@@ -107,6 +108,8 @@ body {
   display: flex;
   align-items: center;
   gap: 12px;
+  max-width: 55%;
+  flex-shrink: 1;
 }
 
 .brand-icon {
@@ -119,17 +122,21 @@ body {
   justify-content: center;
   color: #fff;
   box-shadow: 0 0 15px rgba(2, 132, 199, 0.4);
+  flex-shrink: 0;
+}
+
+.brand-text {
+  min-width: 0;
 }
 
 .brand-text h1 {
   font-family: var(--font-heading);
-  font-size: 1.15rem;
+  font-size: 0.92rem;
   font-weight: 700;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.01em;
   color: #fff;
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  line-height: 1.25;
+  display: block;
 }
 
 .brand-text h1 span {
@@ -141,19 +148,24 @@ body {
   padding: 2px 7px;
   border-radius: 6px;
   letter-spacing: 0.05em;
+  display: inline-block;
+  margin-left: 6px;
+  vertical-align: middle;
 }
 
 .brand-text p {
-  font-size: 0.76rem;
+  font-size: 0.74rem;
   color: var(--text-muted);
   font-weight: 400;
+  margin-top: 2px;
 }
 
 /* Search bar */
 .header-search {
   position: relative;
   flex: 1;
-  max-width: 520px;
+  min-width: 160px;
+  max-width: 480px;
 }
 
 .search-input-wrapper {
@@ -1592,6 +1604,12 @@ body {
 
 /* Responsive adjustments */
 @media (max-width: 1200px) {
+  .header-brand {
+    max-width: 50%;
+  }
+  .brand-text h1 {
+    font-size: 0.84rem;
+  }
   .kpi-banner {
     grid-template-columns: repeat(3, 1fr);
   }
@@ -1601,6 +1619,12 @@ body {
 }
 
 @media (max-width: 860px) {
+  .header-brand {
+    max-width: 100%;
+  }
+  .brand-text p {
+    display: none;
+  }
   .kpi-banner {
     grid-template-columns: repeat(2, 1fr);
   }
