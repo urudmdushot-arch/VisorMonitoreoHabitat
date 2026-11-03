@@ -289,6 +289,7 @@ function updateMapSource() {
       fase: p.fase,
       is_exact_lot: p.is_exact_lot ? 1 : 0,
       tipo_licencia: p.tipo_licencia,
+      tipo_proyecto: p.tipo_proyecto || '',
       nombre_proyecto: p.nombre_proyecto || 'Sin nombre registrado',
       ad_zonal: p.ad_zonal || 'Sin zonal',
       parroquia: p.parroquia || 'Sin parroquia',
@@ -371,6 +372,26 @@ function showPredioPopup(props, coordinates) {
     ? `<span class="popup-coord-badge exact" title="Ubicación exacta desde catastro DMQ">📍 Ubicación exacta</span>`
     : `<span class="popup-coord-badge approx" title="Ubicación aproximada por parroquia">📌 Ubicación aproximada</span>`;
 
+  // Tipo de proyecto badge
+  const tipoBadgeColor = {
+    'NUEVO': '#10b981',
+    'AMPLIATORIO': '#f59e0b',
+    'MODIFICATORIO': '#8b5cf6'
+  };
+  const tipoProyecto = props.tipo_proyecto || null;
+  const tipoBadge = tipoProyecto
+    ? `<span class="popup-tipo-badge" style="background:${tipoBadgeColor[tipoProyecto] || '#64748b'}20; color:${tipoBadgeColor[tipoProyecto] || '#94a3b8'}; border:1px solid ${tipoBadgeColor[tipoProyecto] || '#64748b'}50; border-radius:4px; font-size:0.70rem; font-weight:700; padding:2px 7px; letter-spacing:0.04em;">${tipoProyecto}</span>`
+    : '';
+
+  // Detectar múltiples licencias del mismo predio
+  const allLicencias = (window.LICENCIAS_DATA || []).filter(p => String(p.predio) === String(props.predio));
+  const multiLicencia = allLicencias.length > 1
+    ? `<div class="pm-item" style="grid-column:1/-1; background:rgba(245,158,11,0.1); border:1px solid rgba(245,158,11,0.3); border-radius:6px; padding:6px 10px;">
+        <span class="pm-lbl" style="color:#f59e0b;">⚠ Múltiples licencias:</span>
+        <span class="pm-val">${allLicencias.map(l => `${l.tipo_licencia}${l.tipo_proyecto ? ' · ' + l.tipo_proyecto : ''}`).join(' / ')}</span>
+       </div>`
+    : '';
+
   const html = `
     <div class="popup-card">
       <div class="popup-header">
@@ -378,8 +399,10 @@ function showPredioPopup(props, coordinates) {
         <span class="popup-type-tag">${props.tipo_licencia}</span>
       </div>
       <div class="popup-body">
-        <h4 class="popup-project-title">${props.nombre_proyecto}</h4>
-        <p class="popup-owner"><strong>Proyecto:</strong> ${props.nombre_proyecto}</p>
+        <div style="display:flex; align-items:flex-start; gap:8px; flex-wrap:wrap; margin-bottom:4px;">
+          <h4 class="popup-project-title" style="margin:0; flex:1;">${props.nombre_proyecto}</h4>
+          ${tipoBadge}
+        </div>
         ${coordBadge}
 
         <!-- Stepper -->
@@ -399,6 +422,7 @@ function showPredioPopup(props, coordinates) {
         </div>
 
         <div class="popup-meta-grid">
+          ${multiLicencia}
           <div class="pm-item">
             <span class="pm-lbl">Adm. Zonal:</span>
             <span class="pm-val">${props.ad_zonal || 'N/A'}</span>
@@ -497,6 +521,7 @@ window.openPredioModal = function(predioNum) {
       <div class="dmc-grid">
         <div class="dmc-field"><span class="dmc-lbl">Clave Catastral:</span><span class="dmc-val">${p.clave_catastral || 'N/A'}</span></div>
         <div class="dmc-field"><span class="dmc-lbl">Parroquia:</span><span class="dmc-val">${p.parroquia || 'N/A'}</span></div>
+        <div class="dmc-field"><span class="dmc-lbl">Tipo de Proyecto:</span><span class="dmc-val" style="font-weight:700; color:${p.tipo_proyecto === 'NUEVO' ? '#10b981' : p.tipo_proyecto === 'AMPLIATORIO' ? '#f59e0b' : p.tipo_proyecto === 'MODIFICATORIO' ? '#8b5cf6' : '#94a3b8'}">${p.tipo_proyecto || 'No especificado'}</span></div>
         <div class="dmc-field"><span class="dmc-lbl">Área Bruta:</span><span class="dmc-val">${p.area_bruta ? p.area_bruta.toLocaleString() + ' m²' : 'N/A'}</span></div>
         <div class="dmc-field"><span class="dmc-lbl">Coordenadas WGS84:</span><span class="dmc-val">${p.lat.toFixed(5)}, ${p.lng.toFixed(5)}</span></div>
         <div class="dmc-field"><span class="dmc-lbl">Tiempo Transición (EC&rarr;AZ):</span><span class="dmc-val" style="color:#f59e0b">${p.dias_transicion ? p.dias_transicion + ' días' : 'Directo / No registrado'}</span></div>
@@ -950,6 +975,7 @@ function populateTable() {
         <td><a class="table-predio-link" onclick="locatePredioOnMap('${p.predio}')">${p.predio}</a></td>
         <td>${faseBadge}</td>
         <td><span style="font-weight:600">${p.tipo_licencia}</span></td>
+        <td><span style="font-size:0.75rem; font-weight:700; color:${p.tipo_proyecto === 'NUEVO' ? '#10b981' : p.tipo_proyecto === 'AMPLIATORIO' ? '#f59e0b' : p.tipo_proyecto === 'MODIFICATORIO' ? '#8b5cf6' : '#64748b'}">${p.tipo_proyecto || '-'}</span></td>
         <td style="max-width:240px; overflow:hidden; text-overflow:ellipsis" title="${p.nombre_proyecto}">${p.nombre_proyecto || 'S/N'}</td>
         <td>${p.ad_zonal ? p.ad_zonal.replace('Administración Zonal ', 'AZ ') : '-'}</td>
         <td>${p.parroquia || '-'}</td>
@@ -978,7 +1004,7 @@ function exportFilteredToCSV() {
   }
 
   const headers = [
-    'Predio', 'Fase', 'Tipo_Licencia', 'Proyecto',
+    'Predio', 'Fase', 'Tipo_Licencia', 'Tipo_Proyecto', 'Proyecto',
     'Adm_Zonal', 'Parroquia', 'Entidad_Colaboradora', 'Clave_Catastral',
     'Fecha_Emision_EC', 'Fecha_Inicio_AZ', 'Fecha_Emision_AZ', 'Dias_Transicion',
     'Dias_Ejecucion_AZ', 'AMC_Certificado', 'AMC_Resultado', 'Area_Bruta', 'Latitud', 'Longitud'
@@ -988,6 +1014,7 @@ function exportFilteredToCSV() {
     `"${p.predio}"`,
     p.fase,
     `"${p.tipo_licencia}"`,
+    `"${p.tipo_proyecto || ''}"`,
     `"${(p.nombre_proyecto || '').replace(/"/g, '""')}"`,
     `"${p.ad_zonal || ''}"`,
     `"${p.parroquia || ''}"`,
