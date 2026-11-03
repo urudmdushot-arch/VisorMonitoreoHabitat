@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * SISTEMA DE MONITOREO DE LICENCIAS URBANAS (DMQ)
+ * Monitoreo de la Aplicación de la Normativa Urbanística a través del Licenciamiento y la Dinámica Territorial en el Distrito Metropolitano de Quito
  * Lógica de la aplicación: Mapbox GL JS, Chart.js, Filtros Reactivos y Análisis
  * ============================================================================
  */
@@ -156,6 +156,130 @@ function initMap() {
  * Configurar capas de polígonos y geometría predial en Mapbox
  */
 function setupMapLayers() {
+  // ──────────────── CAPAS DE LÍMITES DE ADMINISTRACIONES ZONALES ────────────────
+  // Se agregan PRIMERO para situarse como fondo de referencia territorial
+  // sin interferir en los predios ya cargados.
+  if (!state.map.getSource('zonas-source') && window.ZONAS_DATA) {
+    state.map.addSource('zonas-source', {
+      type: 'geojson',
+      data: window.ZONAS_DATA
+    });
+  }
+
+  // Capa para Rótulos / Labels usando los centroides de cada zona
+  if (!state.map.getSource('zonas-centroids-source') && window.ZONAS_DATA && window.ZONAS_DATA.features) {
+    const centroidFeatures = window.ZONAS_DATA.features.map(f => ({
+      type: 'Feature',
+      id: f.id + '_lbl',
+      geometry: {
+        type: 'Point',
+        coordinates: f.properties.centroid
+      },
+      properties: f.properties
+    }));
+    state.map.addSource('zonas-centroids-source', {
+      type: 'geojson',
+      data: { type: 'FeatureCollection', features: centroidFeatures }
+    });
+  }
+
+  // 1. Relleno zonal translúcido muy suave (fondo cartográfico)
+  if (state.map.getSource('zonas-source') && !state.map.getLayer('zonas-fill')) {
+    state.map.addLayer({
+      id: 'zonas-fill',
+      type: 'fill',
+      source: 'zonas-source',
+      paint: {
+        'fill-color': [
+          'match', ['get', 'cod_adm_zo'],
+          'AZCHA', '#10b981',
+          'AZEE',  '#0284c7',
+          'AZCH',  '#f59e0b',
+          'AZQ',   '#8b5cf6',
+          'AZCA',  '#ec4899',
+          'AZMS',  '#eab308',
+          'AZT',   '#06b6d4',
+          'AZLM',  '#14b8a6',
+          'AZLD',  '#6366f1',
+          'AZEA',  '#f97316',
+          '#38bdf8'
+        ],
+        'fill-opacity': 0.08
+      }
+    });
+  }
+
+  // 2. Límites perimetrales de las Administraciones Zonales (línea sólida y visible)
+  if (state.map.getSource('zonas-source') && !state.map.getLayer('zonas-border')) {
+    state.map.addLayer({
+      id: 'zonas-border',
+      type: 'line',
+      source: 'zonas-source',
+      paint: {
+        'line-color': [
+          'match', ['get', 'cod_adm_zo'],
+          'AZCHA', '#34d399',
+          'AZEE',  '#38bdf8',
+          'AZCH',  '#fbbf24',
+          'AZQ',   '#a78bfa',
+          'AZCA',  '#f472b6',
+          'AZMS',  '#fde047',
+          'AZT',   '#22d3ee',
+          'AZLM',  '#2dd4bf',
+          'AZLD',  '#818cf8',
+          'AZEA',  '#fb923c',
+          '#60a5fa'
+        ],
+        'line-width': [
+          'interpolate', ['linear'], ['zoom'],
+          8, 1.5,
+          11, 2.2,
+          14, 3.2
+        ],
+        'line-opacity': 0.85
+      }
+    });
+  }
+
+  // 3. Rótulos / Etiquetas tipográficas con el nombre de cada Administración Zonal
+  if (state.map.getSource('zonas-centroids-source') && !state.map.getLayer('zonas-labels')) {
+    state.map.addLayer({
+      id: 'zonas-labels',
+      type: 'symbol',
+      source: 'zonas-centroids-source',
+      layout: {
+        'text-field': ['concat', 'AZ ', ['get', 'adm_zonal']],
+        'text-size': [
+          'interpolate', ['linear'], ['zoom'],
+          8, 11,
+          10, 13,
+          12, 15,
+          15, 18
+        ],
+        'text-transform': 'uppercase',
+        'text-letter-spacing': 0.08,
+        'text-allow-overlap': true,
+        'text-ignore-placement': true
+      },
+      paint: {
+        'text-color': '#f8fafc',
+        'text-halo-color': 'rgba(15, 23, 42, 0.95)',
+        'text-halo-width': 2.5,
+        'text-halo-blur': 1.0,
+        'text-opacity': 0.95
+      }
+    });
+  }
+
+  // Sincronizar visibilidad con el botón toggle si ya existe en el DOM
+  const toggleZonalesBtnInit = document.getElementById('toggle-zonales-btn');
+  const initVisibility = (toggleZonalesBtnInit && !toggleZonalesBtnInit.checked) ? 'none' : 'visible';
+  ['zonas-fill', 'zonas-border', 'zonas-labels'].forEach(layerId => {
+    if (state.map.getLayer(layerId)) {
+      state.map.setLayoutProperty(layerId, 'visibility', initVisibility);
+    }
+  });
+
   // Fuente A: predios con geometría exacta del catastro (polígonos reales)
   if (!state.map.getSource('predios-source')) {
     state.map.addSource('predios-source', {
@@ -173,6 +297,7 @@ function setupMapLayers() {
   }
 
   // ──────────────── CAPAS PARA PREDIOS EXACTOS (polígonos del shapefile) ────────────────
+  // Se agregan DESPUÉS de las zonas para renderizarse encima con máxima prioridad
 
   // 1. Relleno del polígono
   if (!state.map.getLayer('predios-polygons')) {
@@ -263,6 +388,29 @@ function setupMapLayers() {
 
   state.map.on('mouseenter', 'predios-polygons', () => { state.map.getCanvas().style.cursor = 'pointer'; });
   state.map.on('mouseleave', 'predios-polygons', () => { state.map.getCanvas().style.cursor = ''; });
+
+  // Evento de clic en Zonas (solo si no se clicó un predio)
+  state.map.on('click', 'zonas-fill', (e) => {
+    const bbox = [[e.point.x - 3, e.point.y - 3], [e.point.x + 3, e.point.y + 3]];
+    const predioHits = state.map.queryRenderedFeatures(bbox, { layers: ['predios-polygons'] });
+    if (predioHits && predioHits.length > 0) return;
+
+    if (!e.features || !e.features.length) return;
+    showZonalPopup(e.features[0].properties, [e.lngLat.lng, e.lngLat.lat]);
+  });
+
+  state.map.on('mouseenter', 'zonas-fill', (e) => {
+    const bbox = [[e.point.x - 3, e.point.y - 3], [e.point.x + 3, e.point.y + 3]];
+    const predioHits = state.map.queryRenderedFeatures(bbox, { layers: ['predios-polygons'] });
+    if (predioHits && predioHits.length > 0) {
+      state.map.getCanvas().style.cursor = 'pointer';
+    } else {
+      state.map.getCanvas().style.cursor = 'default';
+    }
+  });
+  state.map.on('mouseleave', 'zonas-fill', () => {
+    state.map.getCanvas().style.cursor = '';
+  });
 }
 
 
@@ -468,6 +616,56 @@ function showPredioPopup(props, coordinates) {
 }
 
 /**
+ * Mostrar popup de información territorial de la Administración Zonal
+ */
+function showZonalPopup(props, coordinates) {
+  if (state.activePopup) {
+    state.activePopup.remove();
+  }
+
+  const countInZone = state.filteredProjects.filter(p => {
+    const pZ = (p.ad_zonal || '').toLowerCase();
+    const zN = (props.adm_zonal || '').toLowerCase();
+    return pZ.includes(zN) || (props.alias && pZ.includes(props.alias.toLowerCase()));
+  }).length;
+
+  const html = `
+    <div class="custom-popup-card zonal-popup-card">
+      <div class="popup-top" style="border-left: 4px solid ${props.color || '#38bdf8'}; padding-left: 10px;">
+        <span class="popup-phase-pill" style="background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3);">
+          ${props.cod_adm_zo || 'AZ'}
+        </span>
+        <span class="popup-type-pill">Jurisdicción DMQ</span>
+      </div>
+      <div class="popup-body">
+        <h4 class="popup-project-title" style="margin-top: 6px;">${props.nombre_completo || ('Administración Zonal ' + props.adm_zonal)}</h4>
+        <div class="popup-meta-grid" style="margin-top: 10px;">
+          <div class="pm-item">
+            <span class="pm-lbl">Predios en Muestra:</span>
+            <span class="pm-val" style="color: #38bdf8; font-weight: 700;">${countInZone.toLocaleString('es-EC')}</span>
+          </div>
+          <div class="pm-item">
+            <span class="pm-lbl">Superficie Zonal:</span>
+            <span class="pm-val">${props.area_km2 ? props.area_km2.toLocaleString('es-EC') + ' km²' : 'N/A'}</span>
+          </div>
+          <div class="pm-item">
+            <span class="pm-lbl">Perímetro Territorial:</span>
+            <span class="pm-val">${props.perimetro_km ? props.perimetro_km.toLocaleString('es-EC') + ' km' : 'N/A'}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  state.activePopup = new mapboxgl.Popup({ offset: 10, maxWidth: '320px' })
+    .setLngLat(coordinates)
+    .setHTML(html)
+    .addTo(state.map);
+
+  if (window.lucide) lucide.createIcons();
+}
+
+/**
  * Abrir Modal de Ficha Técnica Completa
  */
 window.openPredioModal = function(predioNum) {
@@ -537,7 +735,7 @@ window.openPredioModal = function(predioNum) {
 
   modal.classList.remove('hidden');
   if (window.lucide) lucide.createIcons();
-};
+}
 
 window.closePredioModal = function() {
   document.getElementById('detail-modal-overlay').classList.add('hidden');
@@ -1267,10 +1465,31 @@ function setupEventListeners() {
         state.map.once('style.load', () => {
           setupMapLayers();
           updateMapSource();
+          const toggleZonalesBtn = document.getElementById('toggle-zonales-btn');
+          const isZonalVisible = toggleZonalesBtn ? toggleZonalesBtn.checked : true;
+          const visibility = isZonalVisible ? 'visible' : 'none';
+          ['zonas-fill', 'zonas-border', 'zonas-labels'].forEach(layerId => {
+            if (state.map.getLayer(layerId)) {
+              state.map.setLayoutProperty(layerId, 'visibility', visibility);
+            }
+          });
         });
       }
     });
   });
+
+  // 6.1 Toggle Capa Límites Zonales
+  const toggleZonalesBtn = document.getElementById('toggle-zonales-btn');
+  if (toggleZonalesBtn) {
+    toggleZonalesBtn.addEventListener('change', (e) => {
+      const visibility = e.target.checked ? 'visible' : 'none';
+      ['zonas-fill', 'zonas-border', 'zonas-labels'].forEach(layerId => {
+        if (state.map && state.map.getLayer(layerId)) {
+          state.map.setLayoutProperty(layerId, 'visibility', visibility);
+        }
+      });
+    });
+  }
 
   // 7. Sidebar toggle & Reopen Button
   const sidebar = document.getElementById('analytics-sidebar');

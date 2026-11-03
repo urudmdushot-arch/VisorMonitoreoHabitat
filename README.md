@@ -1,4 +1,4 @@
-# 🏙️ Sistema de Monitoreo de Licencias Urbanas - DMQ
+# 🏙️ Monitoreo de la Aplicación de la Normativa Urbanística a través del Licenciamiento y la Dinámica Territorial en el Distrito Metropolitano de Quito
 
 Plataforma interactiva de monitoreo, analítica espacial y seguimiento integral del ciclo de licenciamiento urbano (**LMU 10** y **LMU 20**) en el **Distrito Metropolitano de Quito (DMQ)**.
 
