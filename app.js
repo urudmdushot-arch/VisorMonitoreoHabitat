@@ -1071,7 +1071,7 @@ function initOrUpdateCharts() {
   });
 
   // --- 4. Collaborative Entities Donut ---
-  const caCount = data.filter(p => p.entidad_colaboradora === 'Colegio de Arquitectos').length;
+  const caCount = data.filter(p => p.entidad_colaboradora === 'Entidad Colaboradora CAE-P' || p.entidad_colaboradora === 'Colegio de Arquitectos').length;
   const desCount = data.filter(p => p.entidad_colaboradora === 'Desintecsa').length;
 
   const ctxEntidades = document.getElementById('chart-entidades').getContext('2d');
@@ -1079,7 +1079,7 @@ function initOrUpdateCharts() {
   state.charts.entidades = new Chart(ctxEntidades, {
     type: 'doughnut',
     data: {
-      labels: ['Colegio de Arquitectos', 'Desintecsa'],
+      labels: ['Entidad Colaboradora CAE-P', 'Desintecsa'],
       datasets: [{
         data: [caCount, desCount],
         backgroundColor: ['#0284c7', '#f59e0b'],
