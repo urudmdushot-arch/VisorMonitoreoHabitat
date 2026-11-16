@@ -12,7 +12,7 @@ mapboxgl.accessToken = window.MAPBOX_ACCESS_TOKEN || _mb.join('.');
 // Límites geográficos del Distrito Metropolitano de Quito (bounding box)
 const QUITO_BOUNDS = {
   latMin: -0.58,
-  latMax:  0.28,
+  latMax: 0.28,
   lngMin: -78.85,
   lngMax: -78.10
 };
@@ -54,7 +54,7 @@ const state = {
     tiempos: null
   },
   filters: {
-    licencia: 'all',
+    licencia: 'LMU 20',
     fase: 'all',
     zonal: 'all',
     entidad: 'all',
@@ -85,17 +85,24 @@ document.addEventListener('DOMContentLoaded', async () => {
  */
 async function loadDatasets() {
   try {
+    let allData = [];
     if (window.LICENCIAS_DATA && window.METRICAS_RESUMEN) {
-      state.rawProjects = window.LICENCIAS_DATA;
+      allData = window.LICENCIAS_DATA;
       state.summaryMetrics = window.METRICAS_RESUMEN;
     } else {
       const [resData, resMetrics] = await Promise.all([
         fetch('public/data/licencias_data.json'),
         fetch('public/data/metricas_resumen.json')
       ]);
-      state.rawProjects = await resData.json();
+      allData = await resData.json();
       state.summaryMetrics = await resMetrics.json();
     }
+
+    // Preservar la muestra íntegra cargada
+    state.allProjects = allData;
+
+    // Alcance activo: por el momento filtrar estrictamente solo licencias y certificados LMU 20
+    state.rawProjects = allData.filter(p => p.tipo_licencia === 'LMU 20');
     state.filteredProjects = [...state.rawProjects];
 
     // Hide loader
@@ -111,7 +118,7 @@ async function loadDatasets() {
     initOrUpdateCharts();
     populateTable();
 
-    document.getElementById('badge-total-count').textContent = `${state.rawProjects.length.toLocaleString()} Predios Rastreados`;
+    document.getElementById('badge-total-count').textContent = `${state.rawProjects.length.toLocaleString()} Predios Rastreados (LMU 20)`;
 
   } catch (error) {
     console.error('Error cargando datasets:', error);
@@ -183,25 +190,32 @@ function setupMapLayers() {
     });
   }
 
+  // Sincronizar visibilidad con el botón toggle si ya existe en el DOM (desactivado por defecto)
+  const toggleZonalesBtnInit = document.getElementById('toggle-zonales-btn');
+  const initVisibility = (toggleZonalesBtnInit && toggleZonalesBtnInit.checked) ? 'visible' : 'none';
+
   // 1. Relleno zonal translúcido muy suave (fondo cartográfico)
   if (state.map.getSource('zonas-source') && !state.map.getLayer('zonas-fill')) {
     state.map.addLayer({
       id: 'zonas-fill',
       type: 'fill',
       source: 'zonas-source',
+      layout: {
+        'visibility': initVisibility
+      },
       paint: {
         'fill-color': [
           'match', ['get', 'cod_adm_zo'],
           'AZCHA', '#10b981',
-          'AZEE',  '#0284c7',
-          'AZCH',  '#f59e0b',
-          'AZQ',   '#8b5cf6',
-          'AZCA',  '#ec4899',
-          'AZMS',  '#eab308',
-          'AZT',   '#06b6d4',
-          'AZLM',  '#14b8a6',
-          'AZLD',  '#6366f1',
-          'AZEA',  '#f97316',
+          'AZEE', '#0284c7',
+          'AZCH', '#f59e0b',
+          'AZQ', '#8b5cf6',
+          'AZCA', '#ec4899',
+          'AZMS', '#eab308',
+          'AZT', '#06b6d4',
+          'AZLM', '#14b8a6',
+          'AZLD', '#6366f1',
+          'AZEA', '#f97316',
           '#38bdf8'
         ],
         'fill-opacity': 0.08
@@ -215,19 +229,22 @@ function setupMapLayers() {
       id: 'zonas-border',
       type: 'line',
       source: 'zonas-source',
+      layout: {
+        'visibility': initVisibility
+      },
       paint: {
         'line-color': [
           'match', ['get', 'cod_adm_zo'],
           'AZCHA', '#34d399',
-          'AZEE',  '#38bdf8',
-          'AZCH',  '#fbbf24',
-          'AZQ',   '#a78bfa',
-          'AZCA',  '#f472b6',
-          'AZMS',  '#fde047',
-          'AZT',   '#22d3ee',
-          'AZLM',  '#2dd4bf',
-          'AZLD',  '#818cf8',
-          'AZEA',  '#fb923c',
+          'AZEE', '#38bdf8',
+          'AZCH', '#fbbf24',
+          'AZQ', '#a78bfa',
+          'AZCA', '#f472b6',
+          'AZMS', '#fde047',
+          'AZT', '#22d3ee',
+          'AZLM', '#2dd4bf',
+          'AZLD', '#818cf8',
+          'AZEA', '#fb923c',
           '#60a5fa'
         ],
         'line-width': [
@@ -248,6 +265,7 @@ function setupMapLayers() {
       type: 'symbol',
       source: 'zonas-centroids-source',
       layout: {
+        'visibility': initVisibility,
         'text-field': ['concat', 'AZ ', ['get', 'adm_zonal']],
         'text-size': [
           'interpolate', ['linear'], ['zoom'],
@@ -271,9 +289,6 @@ function setupMapLayers() {
     });
   }
 
-  // Sincronizar visibilidad con el botón toggle si ya existe en el DOM
-  const toggleZonalesBtnInit = document.getElementById('toggle-zonales-btn');
-  const initVisibility = (toggleZonalesBtnInit && !toggleZonalesBtnInit.checked) ? 'none' : 'visible';
   ['zonas-fill', 'zonas-border', 'zonas-labels'].forEach(layerId => {
     if (state.map.getLayer(layerId)) {
       state.map.setLayoutProperty(layerId, 'visibility', initVisibility);
@@ -315,7 +330,7 @@ function setupMapLayers() {
         ],
         'fill-opacity': [
           'interpolate', ['linear'], ['zoom'],
-          9,  0.50,
+          9, 0.50,
           13, 0.65,
           16, 0.82
         ]
@@ -451,6 +466,8 @@ function updateMapSource() {
       estado_tramite: p.estado_tramite || '',
       amc_registro: p.amc_registro || '',
       amc_resultado: p.amc_resultado || '',
+      total_certificados_amc: p.total_certificados_amc || (p.certificados_amc ? p.certificados_amc.length : 0),
+      total_certificados_ec: p.total_certificados_ec || (p.certificados_ec ? p.certificados_ec.length : 0),
       area_bruta: p.area_bruta || 0,
       year: p.year || 2024,
       center_lng: p.lng,
@@ -531,8 +548,8 @@ function showPredioPopup(props, coordinates) {
     ? `<span class="popup-tipo-badge" style="background:${tipoBadgeColor[tipoProyecto] || '#64748b'}20; color:${tipoBadgeColor[tipoProyecto] || '#94a3b8'}; border:1px solid ${tipoBadgeColor[tipoProyecto] || '#64748b'}50; border-radius:4px; font-size:0.70rem; font-weight:700; padding:2px 7px; letter-spacing:0.04em;">${tipoProyecto}</span>`
     : '';
 
-  // Detectar múltiples licencias del mismo predio
-  const allLicencias = (window.LICENCIAS_DATA || []).filter(p => String(p.predio) === String(props.predio));
+  // Detectar múltiples licencias del mismo predio (dentro del alcance activo LMU 20)
+  const allLicencias = (state.rawProjects || []).filter(p => String(p.predio) === String(props.predio));
   const multiLicencia = allLicencias.length > 1
     ? `<div class="pm-item" style="grid-column:1/-1; background:rgba(245,158,11,0.1); border:1px solid rgba(245,158,11,0.3); border-radius:6px; padding:6px 10px;">
         <span class="pm-lbl" style="color:#f59e0b;">⚠ Múltiples licencias:</span>
@@ -592,10 +609,15 @@ function showPredioPopup(props, coordinates) {
             <span class="pm-lbl">Días Transición (EC&rarr;AZ):</span>
             <span class="pm-val" style="color: #f59e0b;">${props.dias_transicion} días</span>
           </div>` : ''}
+          ${props.total_certificados_ec > 1 ? `
+          <div class="pm-item" style="grid-column:1/-1; background:rgba(6,182,212,0.1); border:1px solid rgba(6,182,212,0.25); border-radius:6px; padding:6px 10px;">
+            <span class="pm-lbl" style="color:#38bdf8; font-weight:700;">Trámites / Certificados EC:</span>
+            <span class="pm-val" style="color:#7dd3fc; font-weight:600;">${props.total_certificados_ec} trámites registrados en Fase 1</span>
+          </div>` : ''}
           ${props.amc_registro ? `
-          <div class="pm-item">
-            <span class="pm-lbl">Certificado AMC:</span>
-            <span class="pm-val" style="color: #10b981;">${props.amc_registro} (${props.amc_resultado})</span>
+          <div class="pm-item" style="${props.total_certificados_amc > 1 ? 'grid-column:1/-1; background:rgba(16,185,129,0.12); border:1px solid rgba(16,185,129,0.3); border-radius:6px; padding:6px 10px;' : ''}">
+            <span class="pm-lbl" style="${props.total_certificados_amc > 1 ? 'color:#10b981; font-weight:700;' : ''}">Certificados AMC:</span>
+            <span class="pm-val" style="color: #10b981; font-weight:600;">${props.total_certificados_amc > 1 ? `${props.total_certificados_amc} certificados emitidos (ver ficha técnica)` : `${props.amc_registro} (${props.amc_resultado})`}</span>
           </div>` : ''}
         </div>
       </div>
@@ -668,12 +690,66 @@ function showZonalPopup(props, coordinates) {
 /**
  * Abrir Modal de Ficha Técnica Completa
  */
-window.openPredioModal = function(predioNum) {
+window.openPredioModal = function (predioNum) {
   const p = state.rawProjects.find(item => item.predio == predioNum);
   if (!p) return;
 
   const modal = document.getElementById('detail-modal-overlay');
   const card = document.getElementById('detail-modal-card');
+
+  // Certificados AMC asociados
+  const certsAmc = p.certificados_amc || [];
+  const amcCertsHtml = certsAmc.length > 0 ? `
+    <div class="dmc-certs-section">
+      <div class="dmc-section-title" style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 0;">
+        <span><i data-lucide="shield-check" style="width:14px; height:14px; vertical-align:middle; margin-right:4px; color:#10b981;"></i> Certificados de Conformidad AMC (${certsAmc.length})</span>
+        <span style="font-size:0.72rem; color:#10b981; font-weight:600; text-transform:none;">Fase 3 &bull; Control Posterior</span>
+      </div>
+      <div class="dmc-certs-list">
+        ${certsAmc.map((c, idx) => `
+          <div class="dmc-cert-card">
+            <div class="dmc-cert-top">
+              <span class="dmc-cert-num">#${idx + 1} &bull; Reg: ${c.registro || 'S/N'}</span>
+              <span class="dmc-cert-badge ${c.resultado === 'FAVORABLE' ? 'favorable' : ''}">${c.resultado || 'FAVORABLE'}</span>
+            </div>
+            <div class="dmc-cert-grid">
+              <span><strong>Certificado / Informe:</strong> ${c.certificado || 'No registrado'}</span>
+              <span><strong>Especialidad:</strong> ${c.tipo || 'CCF EDIFICACIONES'}</span>
+              ${c.area_declarada ? `<span><strong>Área Declarada:</strong> ${c.area_declarada.toLocaleString()} m²</span>` : ''}
+              ${c.proyecto ? `<span><strong>Proyecto:</strong> ${c.proyecto}</span>` : ''}
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  ` : '';
+
+  // Certificados / Trámites Entidades Colaboradoras
+  const certsEc = p.certificados_ec || [];
+  const ecCertsHtml = certsEc.length > 1 ? `
+    <div class="dmc-certs-section">
+      <div class="dmc-section-title" style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 0;">
+        <span><i data-lucide="clipboard-check" style="width:14px; height:14px; vertical-align:middle; margin-right:4px; color:#06b6d4;"></i> Trámites / Certificados EC (${certsEc.length})</span>
+        <span style="font-size:0.72rem; color:#06b6d4; font-weight:600; text-transform:none;">Fase 1 &bull; SLUM</span>
+      </div>
+      <div class="dmc-certs-list">
+        ${certsEc.map((c, idx) => `
+          <div class="dmc-cert-card">
+            <div class="dmc-cert-top">
+              <span class="dmc-cert-num">#${idx + 1} &bull; ${c.expediente || 'Expediente S/N'}</span>
+              <span class="dmc-cert-badge ec">${c.entidad || 'Entidad Colaboradora'}</span>
+            </div>
+            <div class="dmc-cert-grid">
+              <span><strong>Tipo Proyecto:</strong> ${c.tipo_proyecto || 'NUEVO'}</span>
+              <span><strong>Fecha Emisión:</strong> ${c.fecha_emision || 'N/A'}</span>
+              <span><strong>Estado:</strong> ${c.estado || 'EMITIDO'}</span>
+              ${c.area_bruta ? `<span><strong>Área Bruta:</strong> ${c.area_bruta.toLocaleString()} m²</span>` : ''}
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  ` : '';
 
   card.innerHTML = `
     <div class="dmc-header">
@@ -695,8 +771,16 @@ window.openPredioModal = function(predioNum) {
       <div class="dmc-timeline">
         <div class="dmc-tl-step ${p.in_ec ? 'active' : ''}">
           <span class="dmc-tl-title">Fase 1: Entidad Colaboradora</span>
-          <span class="dmc-tl-date">${p.fecha_emision_ec ? `Emitido el: ${p.fecha_emision_ec}` : 'Sin fecha de emisión'}</span>
-          <span class="dmc-tl-meta">Entidad: ${p.entidad_colaboradora || 'No especificada'}</span>
+          <span class="dmc-tl-date">
+            ${certsEc.length > 1 
+              ? `<strong style="color:#38bdf8">${certsEc.length} Trámites / Certificados Registrados</strong>` 
+              : (p.fecha_emision_ec ? `Emitido el: ${p.fecha_emision_ec}` : 'Sin fecha de emisión')}
+          </span>
+          <span class="dmc-tl-meta">
+            ${certsEc.length > 1 
+              ? 'Múltiples actuaciones técnicas SLUM registradas (ver desglose abajo)' 
+              : `Entidad: ${p.entidad_colaboradora || 'No especificada'}`}
+          </span>
         </div>
         <div class="dmc-tl-step ${p.in_az ? 'active' : ''}">
           <span class="dmc-tl-title">Fase 2: Administración Zonal</span>
@@ -710,10 +794,21 @@ window.openPredioModal = function(predioNum) {
         </div>
         <div class="dmc-tl-step ${p.in_amc ? 'active' : ''}">
           <span class="dmc-tl-title">Fase 3: Agencia Metropolitana de Control (AMC)</span>
-          <span class="dmc-tl-date">${p.amc_registro ? `Certificado: ${p.amc_registro}` : 'Pendiente de emisión en AMC'}</span>
-          <span class="dmc-tl-meta">${p.amc_resultado ? `Resultado: ${p.amc_resultado}` : ''}</span>
+          <span class="dmc-tl-date">
+            ${certsAmc.length > 1 
+              ? `<strong style="color:#10b981">${certsAmc.length} Certificados de Conformidad Emitidos</strong>` 
+              : (p.amc_registro ? `Certificado: ${p.amc_registro}` : 'Pendiente de emisión en AMC')}
+          </span>
+          <span class="dmc-tl-meta">
+            ${certsAmc.length > 1 
+              ? 'Múltiples especialidades constructivas aprobadas (ver desglose abajo)' 
+              : (p.amc_resultado ? `Resultado: ${p.amc_resultado}` : '')}
+          </span>
         </div>
       </div>
+
+      ${amcCertsHtml}
+      ${ecCertsHtml}
 
       <div class="dmc-section-title">Datos Catastrales y Geográficos</div>
       <div class="dmc-grid">
@@ -735,16 +830,16 @@ window.openPredioModal = function(predioNum) {
 
   modal.classList.remove('hidden');
   if (window.lucide) lucide.createIcons();
-}
+};
 
-window.closePredioModal = function() {
+window.closePredioModal = function () {
   document.getElementById('detail-modal-overlay').classList.add('hidden');
 };
 
 /**
  * Centrar el mapa en un predio
  */
-window.locatePredioOnMap = function(predioNum) {
+window.locatePredioOnMap = function (predioNum) {
   closePredioModal();
   document.getElementById('data-drawer-overlay').classList.add('hidden');
 
@@ -868,25 +963,29 @@ function updateKpiCards() {
 
   // Días de transición
   const transDays = current.filter(p => p.dias_transicion !== null).map(p => p.dias_transicion);
-  const avgDays = transDays.length > 0 
-    ? Math.round(transDays.reduce((a, b) => a + b, 0) / transDays.length) 
+  const avgDays = transDays.length > 0
+    ? Math.round(transDays.reduce((a, b) => a + b, 0) / transDays.length)
     : 195;
 
   const pctF1 = total > 0 ? ((f1Stayed * 100) / total).toFixed(1) : 0;
   const pctF2 = total > 0 ? ((f2Stayed * 100) / total).toFixed(1) : 0;
   const pctF3 = total > 0 ? ((f3Stayed * 100) / total).toFixed(1) : 0;
 
+  // Certificados totales emitidos
+  const totalAmcCerts = current.reduce((sum, p) => sum + (p.total_certificados_amc || (p.certificados_amc ? p.certificados_amc.length : (p.in_amc ? 1 : 0))), 0);
+  const totalEcCerts = current.reduce((sum, p) => sum + (p.total_certificados_ec || (p.certificados_ec ? p.certificados_ec.length : (p.in_ec ? 1 : 0))), 0);
+
   // Tarjetas Superiores (Flujo Acumulado que ingresó a cada etapa)
   document.getElementById('kpi-val-total').textContent = total.toLocaleString();
-  
-  document.getElementById('kpi-val-fase1').textContent = f1Total.toLocaleString();
-  document.getElementById('kpi-sub-fase1').textContent = `${f1Stayed.toLocaleString()} detenidos en EC (${pctF1}%)`;
+
+  document.getElementById('kpi-val-fase1').innerHTML = `${totalEcCerts.toLocaleString()} <small style="font-size:0.75rem; font-weight:600; color:#cbd5e1;">certificados</small>`;
+  document.getElementById('kpi-sub-fase1').textContent = `${f1Total.toLocaleString()} predios únicos (${f1Stayed.toLocaleString()} detenidos en EC)`;
 
   document.getElementById('kpi-val-fase2').textContent = f2Total.toLocaleString();
   document.getElementById('kpi-sub-fase2').textContent = `${f2Stayed.toLocaleString()} con Licencia Emitida (${pctF2}%)`;
 
-  document.getElementById('kpi-val-fase3').textContent = f3Total.toLocaleString();
-  document.getElementById('kpi-sub-fase3').textContent = `${fullFunnel} trazabilidad ciclo completo`;
+  document.getElementById('kpi-val-fase3').innerHTML = `${totalAmcCerts.toLocaleString()} <small style="font-size:0.75rem; font-weight:600; color:#cbd5e1;">certificados</small>`;
+  document.getElementById('kpi-sub-fase3').textContent = `${f3Total.toLocaleString()} predios únicos (${fullFunnel} ciclo completo)`;
 
   document.getElementById('kpi-val-tiempo').innerHTML = `${avgDays} <small>días</small>`;
 
@@ -895,9 +994,23 @@ function updateKpiCards() {
   document.getElementById('leg-count-f2').textContent = f2Stayed.toLocaleString();
   document.getElementById('leg-count-f3').textContent = f3Stayed.toLocaleString();
 
-  // Actualizar indicadores de filtros activos
+  // Actualizar badges en la barra lateral de filtros
+  const elFaseAll = document.getElementById('badge-fase-all');
+  if (elFaseAll) elFaseAll.textContent = state.rawProjects.length.toLocaleString();
+  const elFase1 = document.getElementById('badge-fase-1');
+  if (elFase1) elFase1.textContent = state.rawProjects.filter(p => p.fase === 1).length.toLocaleString();
+  const elFase2 = document.getElementById('badge-fase-2');
+  if (elFase2) elFase2.textContent = state.rawProjects.filter(p => p.fase === 2).length.toLocaleString();
+  const elFase3 = document.getElementById('badge-fase-3');
+  if (elFase3) elFase3.textContent = state.rawProjects.filter(p => p.fase === 3).length.toLocaleString();
+  const elFaseFunnel = document.getElementById('badge-fase-funnel');
+  if (elFaseFunnel) elFaseFunnel.textContent = state.rawProjects.filter(p => p.in_ec && p.in_az && p.in_amc).length.toLocaleString();
+  const elLicLmu20 = document.getElementById('badge-filter-lic-lmu20');
+  if (elLicLmu20) elLicLmu20.textContent = state.rawProjects.length.toLocaleString();
+
+  // Actualizar indicadores de filtros activos (LMU 20 es el alcance base)
   let activeFilterCount = 0;
-  if (state.filters.licencia !== 'all') activeFilterCount++;
+  if (state.filters.licencia !== 'all' && state.filters.licencia !== 'LMU 20') activeFilterCount++;
   if (state.filters.fase !== 'all') activeFilterCount++;
   if (state.filters.zonal !== 'all' && state.filters.zonal.length > 0) activeFilterCount++;
   if (state.filters.entidad !== 'all' && state.filters.entidad.length > 0) activeFilterCount++;
@@ -913,7 +1026,7 @@ function updateKpiCards() {
     reopenBadge.textContent = activeFilterCount;
     reopenBadge.classList.toggle('hidden', activeFilterCount === 0);
   }
-  
+
   const countLabel = document.getElementById('legend-count-label');
   if (countLabel) {
     countLabel.textContent = `${total.toLocaleString()} predios`;
@@ -1162,10 +1275,10 @@ function populateTable() {
 
   let html = '';
   pageItems.forEach(p => {
-    const faseBadge = p.fase === 3 
+    const faseBadge = p.fase === 3
       ? '<span style="color:#10b981; font-weight:700">Fase 3: AMC</span>'
-      : (p.fase === 2 
-        ? '<span style="color:#f59e0b; font-weight:700">Fase 2: AZ</span>' 
+      : (p.fase === 2
+        ? '<span style="color:#f59e0b; font-weight:700">Fase 2: AZ</span>'
         : '<span style="color:#38bdf8; font-weight:700">Fase 1: EC</span>');
 
     html += `
@@ -1267,11 +1380,11 @@ function setupEventListeners() {
 
   // 3. Checklist filters (Zonal, Entidad, Año)
   function setupChecklistFilter(group, onChangeCallback) {
-    const listEl   = document.getElementById(`cl-${group}-list`);
+    const listEl = document.getElementById(`cl-${group}-list`);
     const toggleEl = listEl ? listEl.previousElementSibling : null;
-    const labelEl  = document.getElementById(`cl-${group}-label`);
-    const allCb    = listEl ? listEl.querySelector('.cl-all') : null;
-    const options  = listEl ? [...listEl.querySelectorAll(`.cl-option[data-group="${group}"]`)] : [];
+    const labelEl = document.getElementById(`cl-${group}-label`);
+    const allCb = listEl ? listEl.querySelector('.cl-all') : null;
+    const options = listEl ? [...listEl.querySelectorAll(`.cl-option[data-group="${group}"]`)] : [];
 
     if (!listEl || !toggleEl) return;
 
@@ -1347,9 +1460,9 @@ function setupEventListeners() {
   }
 
   const labelDefaults = {
-    zonal:   'Todas las Adm. Zonales',
+    zonal: 'Todas las Adm. Zonales',
     entidad: 'Todas las Entidades',
-    anio:    'Todos los Años',
+    anio: 'Todos los Años',
   };
 
   setupChecklistFilter('zonal', () => {
@@ -1374,14 +1487,14 @@ function setupEventListeners() {
   // 4. Reset Filters
   document.getElementById('reset-filters-btn').addEventListener('click', () => {
     state.filters = {
-      licencia: 'all',
+      licencia: 'LMU 20',
       fase: 'all',
       zonal: 'all',
       entidad: 'all',
       anio: 'all',
       query: ''
     };
-    document.querySelectorAll('#pill-licencia .pill-btn').forEach(b => b.classList.toggle('active', b.getAttribute('data-filter') === 'all'));
+    document.querySelectorAll('#pill-licencia .pill-btn').forEach(b => b.classList.toggle('active', b.getAttribute('data-filter') === 'LMU 20'));
     document.querySelectorAll('#pill-fase .pill-btn').forEach(b => b.classList.toggle('active', b.getAttribute('data-fase') === 'all'));
     // Reset checklists
     ['zonal', 'entidad', 'anio'].forEach(group => {
@@ -1466,7 +1579,7 @@ function setupEventListeners() {
           setupMapLayers();
           updateMapSource();
           const toggleZonalesBtn = document.getElementById('toggle-zonales-btn');
-          const isZonalVisible = toggleZonalesBtn ? toggleZonalesBtn.checked : true;
+          const isZonalVisible = toggleZonalesBtn ? toggleZonalesBtn.checked : false;
           const visibility = isZonalVisible ? 'visible' : 'none';
           ['zonas-fill', 'zonas-border', 'zonas-labels'].forEach(layerId => {
             if (state.map.getLayer(layerId)) {

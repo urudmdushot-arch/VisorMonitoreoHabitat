@@ -89,9 +89,9 @@
         <i data-lucide="building-2"></i>
       </div>
       <div class="kpi-content">
-        <div class="kpi-label">Total Predios</div>
-        <div class="kpi-value" id="kpi-val-total">5,886</div>
-        <div class="kpi-sub" id="kpi-sub-total">100% de la muestra DMQ</div>
+        <div class="kpi-label">Total Predios (LMU 20)</div>
+        <div class="kpi-value" id="kpi-val-total">5,560</div>
+        <div class="kpi-sub" id="kpi-sub-total">Alcance LMU 20 (Edificaciones)</div>
       </div>
     </div>
 
@@ -100,9 +100,9 @@
         <i data-lucide="clipboard-check"></i>
       </div>
       <div class="kpi-content">
-        <div class="kpi-label">Fase 1: Ingreso a EC</div>
-        <div class="kpi-value" id="kpi-val-fase1">4,691</div>
-        <div class="kpi-sub highlight-amber" id="kpi-sub-fase1">1,535 detenidos en EC (32.7%)</div>
+        <div class="kpi-label">Fase 1: Certificados EC</div>
+        <div class="kpi-value" id="kpi-val-fase1">4,718 <small style="font-size:0.75rem; font-weight:600; color:#cbd5e1;">certificados</small></div>
+        <div class="kpi-sub highlight-amber" id="kpi-sub-fase1">4,386 predios (1,414 detenidos en EC)</div>
       </div>
     </div>
 
@@ -112,8 +112,8 @@
       </div>
       <div class="kpi-content">
         <div class="kpi-label">Fase 2: Ingreso a AZ</div>
-        <div class="kpi-value" id="kpi-val-fase2">4,068</div>
-        <div class="kpi-sub highlight-green" id="kpi-sub-fase2">3,950 con Licencia Emitida</div>
+        <div class="kpi-value" id="kpi-val-fase2">3,863</div>
+        <div class="kpi-sub highlight-green" id="kpi-sub-fase2">3,747 con Licencia Emitida</div>
       </div>
     </div>
 
@@ -122,9 +122,9 @@
         <i data-lucide="shield-check"></i>
       </div>
       <div class="kpi-content">
-        <div class="kpi-label">Fase 3: Control AMC</div>
-        <div class="kpi-value" id="kpi-val-fase3">401</div>
-        <div class="kpi-sub" id="kpi-sub-fase3">84 trazabilidad ciclo completo</div>
+        <div class="kpi-label">Fase 3: Certificados AMC</div>
+        <div class="kpi-value" id="kpi-val-fase3">450 <small style="font-size:0.75rem; font-weight:600; color:#cbd5e1;">certificados</small></div>
+        <div class="kpi-sub highlight-purple" id="kpi-sub-fase3">399 predios únicos (83 ciclo completo)</div>
       </div>
     </div>
 
@@ -158,19 +158,15 @@
       </div>
 
       <div class="filters-sidebar-body">
-        <!-- Group 1: License Type -->
+        <!-- Group 1: License Type (Fijado temporalmente a LMU 20) -->
         <div class="filter-block">
           <label class="filter-block-label">Tipo de Licencia</label>
           <div class="pill-group vertical" id="pill-licencia">
-            <button class="pill-btn active" data-filter="all">
-              <span>Todas las Licencias</span>
-              <span class="pill-badge">5,886</span>
-            </button>
-            <button class="pill-btn" data-filter="LMU 20">
+            <button class="pill-btn active" data-filter="LMU 20" title="Visualizando únicamente LMU 20 (Edificaciones)">
               <span>LMU 20 (Edificaciones)</span>
-              <span class="pill-badge">5,560</span>
+              <span class="pill-badge" id="badge-filter-lic-lmu20">5,560</span>
             </button>
-            <button class="pill-btn" data-filter="LMU 10">
+            <button class="pill-btn" data-filter="LMU 10" id="btn-filter-lmu10" style="display: none;" title="LMU 10 temporalmente no visible">
               <span>LMU 10 (Suelo / Lotes)</span>
               <span class="pill-badge">326</span>
             </button>
@@ -183,27 +179,27 @@
           <div class="pill-group vertical" id="pill-fase">
             <button class="pill-btn active" data-fase="all">
               <span>Todas las Fases</span>
-              <span class="pill-badge">5,886</span>
+              <span class="pill-badge" id="badge-fase-all">5,560</span>
             </button>
             <button class="pill-btn phase-1-btn" data-fase="1" title="Predios detenidos en Entidad Colaboradora">
               <span class="phase-dot c-phase1"></span>
               <span>Fase 1: Detenidos en EC</span>
-              <span class="pill-badge">1,535</span>
+              <span class="pill-badge" id="badge-fase-1">1,414</span>
             </button>
             <button class="pill-btn phase-2-btn" data-fase="2" title="Licencias emitidas por la Administración Zonal">
               <span class="phase-dot c-phase2"></span>
               <span>Fase 2: Con Licencia AZ</span>
-              <span class="pill-badge">3,950</span>
+              <span class="pill-badge" id="badge-fase-2">3,747</span>
             </button>
             <button class="pill-btn phase-3-btn" data-fase="3" title="Predios con certificado de conformidad AMC">
               <span class="phase-dot c-phase3"></span>
               <span>Fase 3: Control AMC</span>
-              <span class="pill-badge">401</span>
+              <span class="pill-badge" id="badge-fase-3">399</span>
             </button>
             <button class="pill-btn funnel-btn" data-fase="funnel" title="Predios con ciclo completo de punta a punta">
               <i data-lucide="git-commit"></i>
               <span>Ciclo Completo Trazado</span>
-              <span class="pill-badge">84</span>
+              <span class="pill-badge" id="badge-fase-funnel">83</span>
             </button>
           </div>
         </div>
@@ -313,29 +309,29 @@
       <div class="map-legend-card" id="map-legend-card">
         <div class="legend-header">
           <h4>Estado Territorial</h4>
-          <span class="legend-subtitle" id="legend-count-label">5,886 predios</span>
+          <span class="legend-subtitle" id="legend-count-label">5,560 predios</span>
         </div>
         <div class="legend-items">
           <div class="legend-item" data-filter-fase="1">
             <span class="legend-dot c-phase1"></span>
             <span class="legend-name">Fase 1: Detenidos en EC</span>
-            <span class="legend-badge" id="leg-count-f1">1,535</span>
+            <span class="legend-badge" id="leg-count-f1">1,414</span>
           </div>
           <div class="legend-item" data-filter-fase="2">
             <span class="legend-dot c-phase2"></span>
             <span class="legend-name">Fase 2: Con Licencia AZ</span>
-            <span class="legend-badge" id="leg-count-f2">3,950</span>
+            <span class="legend-badge" id="leg-count-f2">3,747</span>
           </div>
           <div class="legend-item" data-filter-fase="3">
             <span class="legend-dot c-phase3"></span>
             <span class="legend-name">Fase 3: AMC Certificado</span>
-            <span class="legend-badge" id="leg-count-f3">401</span>
+            <span class="legend-badge" id="leg-count-f3">399</span>
           </div>
         </div>
         <!-- Toggle Capa Límites Zonales -->
         <div class="legend-layer-toggle">
           <label class="toggle-switch-label" title="Mostrar u ocultar los límites de las Administraciones Zonales">
-            <input type="checkbox" id="toggle-zonales-btn" checked>
+            <input type="checkbox" id="toggle-zonales-btn">
             <span class="toggle-switch-slider"></span>
             <span class="toggle-switch-text">
               <i data-lucide="map-pin"></i> Límites Zonales
@@ -528,10 +524,10 @@
   </div>
 
   <!-- Standalone Data Bundle (permite abrir index.html directamente sin requerir servidor) -->
-  <script src="public/data/zonas_data.js?v=20261113"></script>
-  <script src="public/data/licencias_data.js?v=20261113"></script>
+  <script src="public/data/zonas_data.js?v=20261116_certs"></script>
+  <script src="public/data/licencias_data.js?v=20261116_certs"></script>
   <!-- App Logic -->
-  <script src="app.js?v=20261113"></script>
+  <script src="app.js?v=20261116_certs"></script>
 </body>
 
 </html>
