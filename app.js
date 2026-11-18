@@ -774,14 +774,14 @@ window.openPredioModal = function (predioNum) {
         <div class="dmc-tl-step ${p.in_ec ? 'active' : ''}">
           <span class="dmc-tl-title">Fase 1: Entidad Colaboradora</span>
           <span class="dmc-tl-date">
-            ${certsEc.length > 1 
-              ? `<strong style="color:#38bdf8">${certsEc.length} Trámites / Certificados Registrados</strong>` 
-              : (p.fecha_emision_ec ? `Emitido el: ${p.fecha_emision_ec}` : 'Sin fecha de emisión')}
+            ${certsEc.length > 1
+      ? `<strong style="color:#38bdf8">${certsEc.length} Trámites / Certificados Registrados</strong>`
+      : (p.fecha_emision_ec ? `Emitido el: ${p.fecha_emision_ec}` : 'Sin fecha de emisión')}
           </span>
           <span class="dmc-tl-meta">
-            ${certsEc.length > 1 
-              ? 'Múltiples actuaciones técnicas SLUM registradas (ver desglose abajo)' 
-              : `Entidad: ${p.entidad_colaboradora || 'No especificada'}`}
+            ${certsEc.length > 1
+      ? 'Múltiples actuaciones técnicas SLUM registradas (ver desglose abajo)'
+      : `Entidad: ${p.entidad_colaboradora || 'No especificada'}`}
           </span>
         </div>
         <div class="dmc-tl-step ${p.in_az ? 'active' : ''}">
@@ -797,14 +797,14 @@ window.openPredioModal = function (predioNum) {
         <div class="dmc-tl-step ${p.in_amc ? 'active' : ''}">
           <span class="dmc-tl-title">Fase 3: Agencia Metropolitana de Control (AMC)</span>
           <span class="dmc-tl-date">
-            ${certsAmc.length > 1 
-              ? `<strong style="color:#10b981">${certsAmc.length} Certificados de Conformidad Emitidos</strong>` 
-              : (p.amc_registro ? `Certificado: ${p.amc_registro}` : 'Pendiente de emisión en AMC')}
+            ${certsAmc.length > 1
+      ? `<strong style="color:#10b981">${certsAmc.length} Certificados de Conformidad Emitidos</strong>`
+      : (p.amc_registro ? `Certificado: ${p.amc_registro}` : 'Pendiente de emisión en AMC')}
           </span>
           <span class="dmc-tl-meta">
-            ${certsAmc.length > 1 
-              ? 'Múltiples especialidades constructivas aprobadas (ver desglose abajo)' 
-              : (p.amc_resultado ? `Resultado: ${p.amc_resultado}` : '')}
+            ${certsAmc.length > 1
+      ? 'Múltiples especialidades constructivas aprobadas (ver desglose abajo)'
+      : (p.amc_resultado ? `Resultado: ${p.amc_resultado}` : '')}
           </span>
         </div>
       </div>
