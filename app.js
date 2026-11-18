@@ -554,12 +554,14 @@ function showPredioPopup(props, coordinates) {
     ? `<span class="popup-tipo-badge" style="background:${tipoBadgeColor[tipoProyecto] || '#64748b'}20; color:${tipoBadgeColor[tipoProyecto] || '#94a3b8'}; border:1px solid ${tipoBadgeColor[tipoProyecto] || '#64748b'}50; border-radius:4px; font-size:0.70rem; font-weight:700; padding:2px 7px; letter-spacing:0.04em;">${tipoProyecto}</span>`
     : '';
 
-  // Detectar múltiples licencias del mismo predio (dentro del alcance activo LMU 20)
-  const allLicencias = (state.rawProjects || []).filter(p => String(p.predio) === String(props.predio));
-  const multiLicencia = allLicencias.length > 1
-    ? `<div class="pm-item" style="grid-column:1/-1; background:rgba(245,158,11,0.1); border:1px solid rgba(245,158,11,0.3); border-radius:6px; padding:6px 10px;">
-        <span class="pm-lbl" style="color:#f59e0b;">⚠ Múltiples licencias:</span>
-        <span class="pm-val">${allLicencias.map(l => `${l.tipo_licencia}${l.tipo_proyecto ? ' · ' + l.tipo_proyecto : ''}`).join(' / ')}</span>
+  // Detectar múltiples licencias / expedientes del mismo predio
+  const pObj = (state.rawProjects || []).find(p => String(p.predio) === String(props.predio)) || props;
+  const numLic = pObj.total_licencias_az || (pObj.licencias_az ? pObj.licencias_az.length : 1);
+  const numExp = pObj.total_expedientes || (pObj.trazabilidad ? pObj.trazabilidad.length : 1);
+  const multiLicencia = (numLic > 1 || numExp > 1)
+    ? `<div class="pm-item" style="grid-column:1/-1; background:rgba(6,182,212,0.12); border:1px solid rgba(6,182,212,0.3); border-radius:6px; padding:6px 10px;">
+        <span class="pm-lbl" style="color:#38bdf8; font-weight:700;">📑 Trazabilidad Constructiva:</span>
+        <span class="pm-val" style="color:#7dd3fc; font-weight:600;">${numExp} expedientes trazados (${numLic} licencias AZ emitidas)</span>
        </div>`
     : '';
 
@@ -764,6 +766,102 @@ window.openPredioModal = function (predioNum) {
     </div>
   ` : '';
 
+  // Trazabilidad por Expediente / Fase Constructiva
+  const trazabilidad = p.trazabilidad || [];
+  const trazabilidadHtml = trazabilidad.length > 0 ? `
+    <div class="dmc-certs-section" style="border-left: 3px solid #38bdf8;">
+      <div class="dmc-section-title" style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 8px;">
+        <span><i data-lucide="git-merge" style="width:14px; height:14px; vertical-align:middle; margin-right:4px; color:#38bdf8;"></i> Trazabilidad por Expediente / Fase Constructiva (${trazabilidad.length})</span>
+        <span style="font-size:0.72rem; color:#38bdf8; font-weight:600; text-transform:none;">Cruce Fase 1 (EC) &rarr; Fase 2 (AZ) &rarr; Fase 3 (AMC)</span>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:10px;">
+        ${trazabilidad.map((t, idx) => {
+          let badgeBg = 'rgba(56,189,248,0.15)';
+          let badgeColor = '#38bdf8';
+          let badgeBorder = 'rgba(56,189,248,0.3)';
+          if (t.fase_actual === 3) {
+            badgeBg = 'rgba(16,185,129,0.15)';
+            badgeColor = '#34d399';
+            badgeBorder = 'rgba(16,185,129,0.35)';
+          } else if (t.fase_actual === 1) {
+            badgeBg = 'rgba(245,158,11,0.15)';
+            badgeColor = '#fbbf24';
+            badgeBorder = 'rgba(245,158,11,0.35)';
+          }
+
+          const tipoBadgeColor = {
+            'NUEVO': '#10b981',
+            'AMPLIATORIO': '#f59e0b',
+            'MODIFICATORIO': '#8b5cf6',
+            'MOD / AMP': '#06b6d4',
+            'MOD/AMP': '#06b6d4'
+          };
+          const tColor = tipoBadgeColor[t.tipo_proyecto] || '#64748b';
+
+          return `
+            <div class="dmc-trace-card">
+              <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px; flex-wrap:wrap;">
+                <div style="flex:1; min-width:200px;">
+                  <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+                    <span style="font-size:0.8rem; font-weight:700; color:#38bdf8;">#${idx + 1} &bull; ${t.expediente || 'Expediente S/N'}</span>
+                    ${t.tipo_proyecto ? `<span style="font-size:0.65rem; font-weight:700; padding:1px 6px; border-radius:3px; background:${tColor}20; color:${tColor}; border:1px solid ${tColor}50;">${t.tipo_proyecto}</span>` : ''}
+                  </div>
+                  ${t.nombre_proyecto ? `<div style="font-size:0.75rem; color:#cbd5e1; margin-top:2px; font-weight:500;">${t.nombre_proyecto}</div>` : ''}
+                </div>
+                <span style="font-size:0.7rem; font-weight:700; padding:2px 8px; border-radius:12px; background:${badgeBg}; color:${badgeColor}; border:1px solid ${badgeBorder}; white-space:nowrap;">
+                  ${t.estado_ciclo}
+                </span>
+              </div>
+
+              <div class="dmc-mini-pipeline">
+                <!-- Paso 1: Entidad Colaboradora -->
+                <div class="dmc-pipeline-step ${t.fase1_ec ? 'done' : 'skipped'}">
+                  <div class="dmc-pipeline-dot">${t.fase1_ec ? '✓' : '—'}</div>
+                  <div class="dmc-pipeline-info">
+                    <span class="dmc-pipeline-title" style="color:${t.fase1_ec ? '#38bdf8' : '#94a3b8'};">Paso 1: Entidad Colaboradora (Fase 1 - SLUM)</span>
+                    <span class="dmc-pipeline-desc">
+                      ${t.fase1_ec
+                        ? `Certificado emitido por <strong>${t.fase1_ec.entidad || 'EC'}</strong> el ${t.fase1_ec.fecha_emision || 'N/A'}. Estado: <span style="color:#34d399; font-weight:600;">${t.fase1_ec.estado || 'EMITIDO'}</span>${t.fase1_ec.area_bruta ? ` &bull; Área: ${t.fase1_ec.area_bruta.toLocaleString()} m²` : ''}`
+                        : `Sin registro en Entidad Colaboradora (ingreso directo a Fase 2 o predio histórico)`}
+                    </span>
+                  </div>
+                </div>
+
+                <!-- Paso 2: Licencia LMU Administración Zonal -->
+                <div class="dmc-pipeline-step ${t.fase2_az ? 'done' : (t.fase1_ec ? 'pending' : 'skipped')}">
+                  <div class="dmc-pipeline-dot">${t.fase2_az ? '✓' : (t.fase1_ec ? '2' : '—')}</div>
+                  <div class="dmc-pipeline-info">
+                    <span class="dmc-pipeline-title" style="color:${t.fase2_az ? '#34d399' : (t.fase1_ec ? '#fbbf24' : '#94a3b8')};">Paso 2: Licencia LMU - Administración Zonal (Fase 2)</span>
+                    <span class="dmc-pipeline-desc">
+                      ${t.fase2_az
+                        ? `Licencia: <strong style="color:#fff;">${t.fase2_az.licencia || 'S/N'}</strong> &bull; ${t.fase2_az.ad_zonal || 'AZ'}<br>
+                           Emisión: <strong>${t.fase2_az.fecha_emision || 'N/A'}</strong>${t.fase2_az.fecha_inicio ? ` (Ingreso: ${t.fase2_az.fecha_inicio})` : ''}${t.fase2_az.area_bruta ? ` &bull; Área: ${t.fase2_az.area_bruta.toLocaleString()} m²` : ''}${t.fase2_az.profesional ? `<br>Profesional: ${t.fase2_az.profesional}` : ''}`
+                        : (t.fase1_ec ? `<span style="color:#fbbf24;">Pendiente de emisión en Administración Zonal (Certificado EC emitido, aún no registra licencia AZ)</span>` : `Sin licencia AZ registrada`)}
+                    </span>
+                  </div>
+                </div>
+
+                <!-- Paso 3: AMC Control Posterior -->
+                <div class="dmc-pipeline-step ${t.fase3_amc ? 'done' : (t.fase2_az ? 'pending' : 'skipped')}">
+                  <div class="dmc-pipeline-dot">${t.fase3_amc ? '✓' : (t.fase2_az ? '3' : '—')}</div>
+                  <div class="dmc-pipeline-info">
+                    <span class="dmc-pipeline-title" style="color:${t.fase3_amc ? '#a78bfa' : (t.fase2_az ? '#94a3b8' : '#64748b')};">Paso 3: Finalización Constructiva (Fase 3 - AMC)</span>
+                    <span class="dmc-pipeline-desc">
+                      ${t.fase3_amc
+                        ? `Certificado de Conformidad Final: <strong style="color:#fff;">${t.fase3_amc.certificado || t.fase3_amc.registro}</strong><br>
+                           Reg: ${t.fase3_amc.registro} &bull; Resultado: <span style="color:#34d399; font-weight:600;">${t.fase3_amc.resultado || 'FAVORABLE'}</span>${t.fase3_amc.etapa ? ` &bull; Etapa: ${t.fase3_amc.etapa}` : ''}${t.fase3_amc.area_declarada ? ` &bull; Área: ${t.fase3_amc.area_declarada.toLocaleString()} m²` : ''}`
+                        : (t.fase2_az ? `<span style="color:#94a3b8;">En proceso constructivo / Pendiente de verificación e inspección final AMC</span>` : `Pendiente de fases previas`)}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          `;
+        }).join('')}
+      </div>
+    </div>
+  ` : '';
+
   // Trámites de Propiedad Horizontal
   const tramitesPh = p.tramites_ph || [];
   const phColor = p.estado_ph === 'PENDIENTE' ? '#f59e0b' : p.estado_ph === 'TRAMITE ANULADO' ? '#ef4444' : '#8b5cf6';
@@ -857,8 +955,7 @@ window.openPredioModal = function (predioNum) {
         </div>
       </div>
 
-      ${amcCertsHtml}
-      ${ecCertsHtml}
+      ${trazabilidadHtml ? trazabilidadHtml : `${amcCertsHtml}${ecCertsHtml}`}
       ${phHtmlSection}
 
       <div class="dmc-section-title">Datos Catastrales y Geográficos</div>
@@ -1037,9 +1134,10 @@ function updateKpiCards() {
   const pctF2 = total > 0 ? ((f2Stayed * 100) / total).toFixed(1) : 0;
   const pctF3 = total > 0 ? ((f3Stayed * 100) / total).toFixed(1) : 0;
 
-  // Certificados totales emitidos
+  // Certificados y Licencias totales emitidas
   const totalAmcCerts = current.reduce((sum, p) => sum + (p.total_certificados_amc || (p.certificados_amc ? p.certificados_amc.length : (p.in_amc ? 1 : 0))), 0);
   const totalEcCerts = current.reduce((sum, p) => sum + (p.total_certificados_ec || (p.certificados_ec ? p.certificados_ec.length : (p.in_ec ? 1 : 0))), 0);
+  const totalAzLics = current.reduce((sum, p) => sum + (p.total_licencias_az || (p.licencias_az ? p.licencias_az.length : (p.in_az ? 1 : 0))), 0);
 
   // Tarjetas Superiores (Flujo Acumulado que ingresó a cada etapa)
   document.getElementById('kpi-val-total').textContent = total.toLocaleString();
@@ -1047,11 +1145,11 @@ function updateKpiCards() {
   document.getElementById('kpi-val-fase1').innerHTML = `${totalEcCerts.toLocaleString()} <small style="font-size:0.75rem; font-weight:600; color:#cbd5e1;">certificados</small>`;
   document.getElementById('kpi-sub-fase1').textContent = `${f1Total.toLocaleString()} predios únicos (${f1Stayed.toLocaleString()} detenidos en EC)`;
 
-  document.getElementById('kpi-val-fase2').textContent = f2Total.toLocaleString();
-  document.getElementById('kpi-sub-fase2').textContent = `${f2Stayed.toLocaleString()} con Licencia Emitida (${pctF2}%)`;
+  document.getElementById('kpi-val-fase2').innerHTML = `${totalAzLics.toLocaleString()} <small style="font-size:0.75rem; font-weight:600; color:#cbd5e1;">licencias</small>`;
+  document.getElementById('kpi-sub-fase2').textContent = `${f2Total.toLocaleString()} predios únicos (${pctF2}% avance a Fase 2)`;
 
   document.getElementById('kpi-val-fase3').innerHTML = `${totalAmcCerts.toLocaleString()} <small style="font-size:0.75rem; font-weight:600; color:#cbd5e1;">certificados</small>`;
-  document.getElementById('kpi-sub-fase3').textContent = `${f3Total.toLocaleString()} predios únicos (${fullFunnel} ciclo completo)`;
+  document.getElementById('kpi-sub-fase3').textContent = `${f3Total.toLocaleString()} predios únicos (${fullFunnel.toLocaleString()} ciclo completo)`;
 
   document.getElementById('kpi-val-tiempo').innerHTML = `${avgDays} <small>días</small>`;
 
