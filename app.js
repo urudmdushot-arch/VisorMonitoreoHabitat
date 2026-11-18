@@ -468,6 +468,9 @@ function updateMapSource() {
       amc_resultado: p.amc_resultado || '',
       total_certificados_amc: p.total_certificados_amc || (p.certificados_amc ? p.certificados_amc.length : 0),
       total_certificados_ec: p.total_certificados_ec || (p.certificados_ec ? p.certificados_ec.length : 0),
+      tiene_ph: p.tiene_ph ? 1 : 0,
+      estado_ph: p.estado_ph || '',
+      total_tramites_ph: p.total_tramites_ph || (p.tramites_ph ? p.tramites_ph.length : 0),
       area_bruta: p.area_bruta || 0,
       year: p.year || 2024,
       center_lng: p.lng,
@@ -621,6 +624,13 @@ function showPredioPopup(props, coordinates) {
             <span class="pm-lbl" style="${props.total_certificados_amc > 1 ? 'color:#10b981; font-weight:700;' : ''}">Certificados AMC:</span>
             <span class="pm-val" style="color: #10b981; font-weight:600;">${props.total_certificados_amc > 1 ? `${props.total_certificados_amc} certificados emitidos (ver ficha técnica)` : `${props.amc_registro} (${props.amc_resultado})`}</span>
           </div>` : ''}
+          ${parseInt(props.tiene_ph) === 1 ? `
+          <div class="pm-item" style="grid-column:1/-1; background:rgba(139,92,246,0.12); border:1px solid rgba(139,92,246,0.35); border-radius:6px; padding:6px 10px; display:flex; justify-content:space-between; align-items:center;">
+            <span class="pm-lbl" style="color:#c4b5fd; font-weight:700;">🏢 Propiedad Horizontal:</span>
+            <span style="background:${props.estado_ph === 'PENDIENTE' ? '#f59e0b' : props.estado_ph === 'TRAMITE ANULADO' ? '#ef4444' : '#8b5cf6'}25; color:${props.estado_ph === 'PENDIENTE' ? '#fbbf24' : props.estado_ph === 'TRAMITE ANULADO' ? '#f87171' : '#a78bfa'}; border:1px solid ${props.estado_ph === 'PENDIENTE' ? '#f59e0b' : props.estado_ph === 'TRAMITE ANULADO' ? '#ef4444' : '#8b5cf6'}50; border-radius:4px; font-size:0.72rem; font-weight:700; padding:2px 8px; letter-spacing:0.02em;">
+              ${props.estado_ph || 'En trámite'}${props.total_tramites_ph > 1 ? ` (${props.total_tramites_ph} trámites)` : ''}
+            </span>
+          </div>` : ''}
         </div>
       </div>
       <div class="popup-footer">
@@ -753,11 +763,48 @@ window.openPredioModal = function (predioNum) {
     </div>
   ` : '';
 
+  // Trámites de Propiedad Horizontal
+  const tramitesPh = p.tramites_ph || [];
+  const phColor = p.estado_ph === 'PENDIENTE' ? '#f59e0b' : p.estado_ph === 'TRAMITE ANULADO' ? '#ef4444' : '#8b5cf6';
+  const phHtmlSection = p.tiene_ph ? `
+    <div class="dmc-certs-section" style="border-left: 3px solid #8b5cf6;">
+      <div class="dmc-section-title" style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 0;">
+        <span><i data-lucide="building-2" style="width:14px; height:14px; vertical-align:middle; margin-right:4px; color:#8b5cf6;"></i> Propiedad Horizontal (${tramitesPh.length})</span>
+        <span class="dmc-cert-badge" style="background:${phColor}20; color:${phColor}; border:1px solid ${phColor}50; text-transform:none;">
+          ${p.estado_ph || 'En trámite'}
+        </span>
+      </div>
+      <div class="dmc-certs-list">
+        ${tramitesPh.map((t, idx) => `
+          <div class="dmc-cert-card" style="border-color:rgba(139,92,246,0.25);">
+            <div class="dmc-cert-top">
+              <span class="dmc-cert-num">#${idx + 1} &bull; ${t.expediente || t.licencia || 'Expediente PH'}</span>
+              <span class="dmc-cert-badge" style="background:${t.estado === 'PENDIENTE' ? '#f59e0b' : t.estado === 'TRAMITE ANULADO' ? '#ef4444' : '#8b5cf6'}20; color:${t.estado === 'PENDIENTE' ? '#fbbf24' : t.estado === 'TRAMITE ANULADO' ? '#f87171' : '#a78bfa'}; border:1px solid currentColor;">${t.estado}</span>
+            </div>
+            <div class="dmc-cert-grid">
+              ${t.licencia ? `<span><strong>Licencia PH:</strong> ${t.licencia}</span>` : ''}
+              <span><strong>Fecha Inicio:</strong> ${t.fecha_inicio || 'N/A'}</span>
+              ${t.estado_flujo ? `<span><strong>Estado Flujo:</strong> ${t.estado_flujo}</span>` : ''}
+              ${t.dias_ejecucion ? `<span><strong>Días Ejecución:</strong> ${t.dias_ejecucion} d</span>` : ''}
+              ${t.ad_zonal ? `<span><strong>Ad. Zonal:</strong> ${t.ad_zonal.replace('Administración Zonal ', 'AZ ')}</span>` : ''}
+              ${t.profesional ? `<span><strong>Profesional:</strong> ${t.profesional}</span>` : ''}
+            </div>
+            ${t.detalle ? `
+              <div style="margin-top:6px; font-size:0.75rem; color:#94a3b8; background:rgba(255,255,255,0.03); padding:6px 8px; border-radius:4px; border:1px solid rgba(255,255,255,0.05); line-height:1.35;">
+                <strong style="color:#cbd5e1;">Unidades / Destinos:</strong> ${t.detalle}
+              </div>
+            ` : ''}
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  ` : '';
+
   card.innerHTML = `
     <div class="dmc-header">
       <div class="dmc-title-group">
         <h2>Predio N° ${p.predio}</h2>
-        <span>${p.tipo_licencia} &bull; ${p.tipo_proyecto || 'General'}</span>
+        <span>${p.tipo_licencia} &bull; ${p.tipo_proyecto || 'General'}${p.tiene_ph ? ` &bull; <strong style="color:${phColor};">PH: ${p.estado_ph || 'Sí'}</strong>` : ''}</span>
       </div>
       <button class="icon-btn" onclick="closePredioModal()"><i data-lucide="x"></i></button>
     </div>
@@ -811,12 +858,14 @@ window.openPredioModal = function (predioNum) {
 
       ${amcCertsHtml}
       ${ecCertsHtml}
+      ${phHtmlSection}
 
       <div class="dmc-section-title">Datos Catastrales y Geográficos</div>
       <div class="dmc-grid">
         <div class="dmc-field"><span class="dmc-lbl">Clave Catastral:</span><span class="dmc-val">${p.clave_catastral || 'N/A'}</span></div>
         <div class="dmc-field"><span class="dmc-lbl">Parroquia:</span><span class="dmc-val">${p.parroquia || 'N/A'}</span></div>
         <div class="dmc-field"><span class="dmc-lbl">Tipo de Proyecto:</span><span class="dmc-val" style="font-weight:700; color:${p.tipo_proyecto === 'NUEVO' ? '#10b981' : p.tipo_proyecto === 'AMPLIATORIO' ? '#f59e0b' : p.tipo_proyecto === 'MODIFICATORIO' ? '#8b5cf6' : p.tipo_proyecto === 'MOD / AMP' ? '#06b6d4' : '#94a3b8'}">${p.tipo_proyecto || 'No especificado'}</span></div>
+        <div class="dmc-field"><span class="dmc-lbl">Propiedad Horizontal:</span><span class="dmc-val" style="font-weight:700; color:${p.tiene_ph ? phColor : '#64748b'};">${p.tiene_ph ? `Sí &bull; ${p.estado_ph || 'En trámite'}` : 'No registra trámite'}</span></div>
         <div class="dmc-field"><span class="dmc-lbl">Área Bruta:</span><span class="dmc-val">${p.area_bruta ? p.area_bruta.toLocaleString() + ' m²' : 'N/A'}</span></div>
         <div class="dmc-field"><span class="dmc-lbl">Coordenadas WGS84:</span><span class="dmc-val">${p.lat.toFixed(5)}, ${p.lng.toFixed(5)}</span></div>
         <div class="dmc-field"><span class="dmc-lbl">Tiempo Transición (EC&rarr;AZ):</span><span class="dmc-val" style="color:#f59e0b">${p.dias_transicion ? p.dias_transicion + ' días' : 'Directo / No registrado'}</span></div>
@@ -1289,7 +1338,10 @@ function populateTable() {
         <td>${faseBadge}</td>
         <td><span style="font-weight:600">${p.tipo_licencia}</span></td>
         <td><span style="font-size:0.75rem; font-weight:700; color:${p.tipo_proyecto === 'NUEVO' ? '#10b981' : p.tipo_proyecto === 'AMPLIATORIO' ? '#f59e0b' : p.tipo_proyecto === 'MODIFICATORIO' ? '#8b5cf6' : p.tipo_proyecto === 'MOD / AMP' ? '#06b6d4' : '#64748b'}">${p.tipo_proyecto || '-'}</span></td>
-        <td style="max-width:240px; overflow:hidden; text-overflow:ellipsis" title="${p.nombre_proyecto}">${p.nombre_proyecto || 'S/N'}</td>
+        <td style="max-width:240px; overflow:hidden; text-overflow:ellipsis" title="${p.nombre_proyecto}">
+          ${p.nombre_proyecto || 'S/N'}
+          ${p.tiene_ph ? `<span title="Propiedad Horizontal: ${p.estado_ph || 'En trámite'}" style="display:inline-block; margin-left:6px; font-size:0.65rem; padding:1px 5px; border-radius:3px; background:rgba(139,92,246,0.15); color:${p.estado_ph === 'PENDIENTE' ? '#fbbf24' : p.estado_ph === 'TRAMITE ANULADO' ? '#f87171' : '#a78bfa'}; border:1px solid rgba(139,92,246,0.35); font-weight:700; vertical-align:middle;">🏢 PH: ${p.estado_ph || 'Sí'}</span>` : ''}
+        </td>
         <td>${p.ad_zonal ? p.ad_zonal.replace('Administración Zonal ', 'AZ ') : '-'}</td>
         <td>${p.parroquia || '-'}</td>
         <td>${p.entidad_colaboradora || '-'}</td>
@@ -1317,7 +1369,7 @@ function exportFilteredToCSV() {
   }
 
   const headers = [
-    'Predio', 'Fase', 'Tipo_Licencia', 'Tipo_Proyecto', 'Proyecto',
+    'Predio', 'Fase', 'Tipo_Licencia', 'Tipo_Proyecto', 'Propiedad_Horizontal', 'Estado_PH', 'Proyecto',
     'Adm_Zonal', 'Parroquia', 'Entidad_Colaboradora', 'Clave_Catastral',
     'Fecha_Emision_EC', 'Fecha_Inicio_AZ', 'Fecha_Emision_AZ', 'Dias_Transicion',
     'Dias_Ejecucion_AZ', 'AMC_Certificado', 'AMC_Resultado', 'Area_Bruta', 'Latitud', 'Longitud'
@@ -1328,6 +1380,8 @@ function exportFilteredToCSV() {
     p.fase,
     `"${p.tipo_licencia}"`,
     `"${p.tipo_proyecto || ''}"`,
+    p.tiene_ph ? '"SÍ"' : '"NO"',
+    `"${p.estado_ph || ''}"`,
     `"${(p.nombre_proyecto || '').replace(/"/g, '""')}"`,
     `"${p.ad_zonal || ''}"`,
     `"${p.parroquia || ''}"`,
