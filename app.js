@@ -56,6 +56,7 @@ const state = {
   filters: {
     licencia: 'LMU 20',
     fase: 'all',
+    tipo: 'all',
     zonal: 'all',
     entidad: 'all',
     anio: 'all',
@@ -951,6 +952,20 @@ function applyFilters() {
       }
     }
 
+    // 3. Tipo de Proyecto & Propiedad Horizontal (multi-checklist)
+    if (state.filters.tipo !== 'all' && state.filters.tipo.length > 0) {
+      const match = state.filters.tipo.some(v => {
+        if (v === 'PROPIEDAD_HORIZONTAL') {
+          return p.tiene_ph === true;
+        }
+        if (v === 'SIN_DATO') {
+          return !p.tipo_proyecto || p.tipo_proyecto.trim() === '';
+        }
+        return p.tipo_proyecto === v;
+      });
+      if (!match) return false;
+    }
+
     // 3. Zonal (multi-checklist — array o 'all')
     if (state.filters.zonal !== 'all' && state.filters.zonal.length > 0) {
       const projectZonal = normStr(p.ad_zonal);
@@ -1059,10 +1074,25 @@ function updateKpiCards() {
   const elLicLmu20 = document.getElementById('badge-filter-lic-lmu20');
   if (elLicLmu20) elLicLmu20.textContent = state.rawProjects.length.toLocaleString();
 
+  // Badges checklist Tipo de Proyecto y PH
+  const elTipoNuevo = document.getElementById('badge-tipo-nuevo');
+  if (elTipoNuevo) elTipoNuevo.textContent = state.rawProjects.filter(p => p.tipo_proyecto === 'NUEVO').length.toLocaleString();
+  const elTipoAmp = document.getElementById('badge-tipo-amp');
+  if (elTipoAmp) elTipoAmp.textContent = state.rawProjects.filter(p => p.tipo_proyecto === 'AMPLIATORIO').length.toLocaleString();
+  const elTipoMod = document.getElementById('badge-tipo-mod');
+  if (elTipoMod) elTipoMod.textContent = state.rawProjects.filter(p => p.tipo_proyecto === 'MODIFICATORIO').length.toLocaleString();
+  const elTipoModAmp = document.getElementById('badge-tipo-modamp');
+  if (elTipoModAmp) elTipoModAmp.textContent = state.rawProjects.filter(p => p.tipo_proyecto === 'MOD / AMP').length.toLocaleString();
+  const elTipoSinDato = document.getElementById('badge-tipo-sindato');
+  if (elTipoSinDato) elTipoSinDato.textContent = state.rawProjects.filter(p => !p.tipo_proyecto || p.tipo_proyecto.trim() === '').length.toLocaleString();
+  const elTipoPh = document.getElementById('badge-tipo-ph');
+  if (elTipoPh) elTipoPh.textContent = state.rawProjects.filter(p => p.tiene_ph === true).length.toLocaleString();
+
   // Actualizar indicadores de filtros activos (LMU 20 es el alcance base)
   let activeFilterCount = 0;
   if (state.filters.licencia !== 'all' && state.filters.licencia !== 'LMU 20') activeFilterCount++;
   if (state.filters.fase !== 'all') activeFilterCount++;
+  if (state.filters.tipo !== 'all' && state.filters.tipo.length > 0) activeFilterCount++;
   if (state.filters.zonal !== 'all' && state.filters.zonal.length > 0) activeFilterCount++;
   if (state.filters.entidad !== 'all' && state.filters.entidad.length > 0) activeFilterCount++;
   if (state.filters.anio !== 'all' && state.filters.anio.length > 0) activeFilterCount++;
@@ -1492,8 +1522,9 @@ function setupEventListeners() {
         // Build compact label
         if (selected.length === 1) {
           // Show short label (strip prefix like "Administración Zonal ")
-          labelEl.textContent = options.find(c => c.value === selected[0])
-            ?.nextElementSibling?.textContent || selected[0];
+          const optMatch = options.find(c => c.value === selected[0]);
+          const text = optMatch?.nextElementSibling?.textContent || selected[0];
+          labelEl.textContent = text.trim();
         } else {
           labelEl.textContent = `${selected.length} seleccionados`;
         }
@@ -1516,11 +1547,13 @@ function setupEventListeners() {
   }
 
   const labelDefaults = {
+    tipo: 'Todos los Tipos',
     zonal: 'Todas las Adm. Zonales',
     entidad: 'Todas las Entidades',
     anio: 'Todos los Años',
   };
 
+  setupChecklistFilter('tipo', applyFilters);
   setupChecklistFilter('zonal', () => {
     applyFilters();
     if (state.filters.zonal !== 'all' && state.filters.zonal.length > 0) {
@@ -1545,6 +1578,7 @@ function setupEventListeners() {
     state.filters = {
       licencia: 'LMU 20',
       fase: 'all',
+      tipo: 'all',
       zonal: 'all',
       entidad: 'all',
       anio: 'all',
@@ -1553,7 +1587,7 @@ function setupEventListeners() {
     document.querySelectorAll('#pill-licencia .pill-btn').forEach(b => b.classList.toggle('active', b.getAttribute('data-filter') === 'LMU 20'));
     document.querySelectorAll('#pill-fase .pill-btn').forEach(b => b.classList.toggle('active', b.getAttribute('data-fase') === 'all'));
     // Reset checklists
-    ['zonal', 'entidad', 'anio'].forEach(group => {
+    ['tipo', 'zonal', 'entidad', 'anio'].forEach(group => {
       const toggle = document.querySelector(`#cl-${group} .checklist-toggle`);
       if (toggle && toggle._reset) toggle._reset();
     });

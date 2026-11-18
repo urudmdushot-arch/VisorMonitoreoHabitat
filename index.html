@@ -204,7 +204,71 @@
           </div>
         </div>
 
-        <!-- Group 3: Zonal Administration (Checklist) -->
+        <!-- Group: Tipo de Proyecto / Propiedad Horizontal (Checklist) -->
+        <div class="filter-block">
+          <label class="filter-block-label">Tipo de Proyecto &bull; PH</label>
+          <div class="checklist-filter" id="cl-tipo">
+            <button class="checklist-toggle" aria-expanded="false" data-target="cl-tipo-list">
+              <span class="checklist-toggle-label" id="cl-tipo-label">Todos los Tipos</span>
+              <i data-lucide="chevron-down" class="cl-chevron"></i>
+            </button>
+            <div class="checklist-list hidden" id="cl-tipo-list">
+              <label class="cl-item cl-all-item">
+                <input type="checkbox" class="cl-all" data-group="tipo" checked> <span>Todos</span>
+              </label>
+              <label class="cl-item">
+                <input type="checkbox" class="cl-option" data-group="tipo" value="NUEVO">
+                <span style="display:inline-flex; align-items:center; gap:6px;">
+                  <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#10b981;"></span>
+                  <span>Nuevo</span>
+                </span>
+                <span class="pill-badge" id="badge-tipo-nuevo" style="margin-left:auto; font-size:0.68rem; padding:1px 6px;">3,805</span>
+              </label>
+              <label class="cl-item">
+                <input type="checkbox" class="cl-option" data-group="tipo" value="AMPLIATORIO">
+                <span style="display:inline-flex; align-items:center; gap:6px;">
+                  <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#f59e0b;"></span>
+                  <span>Ampliatorio</span>
+                </span>
+                <span class="pill-badge" id="badge-tipo-amp" style="margin-left:auto; font-size:0.68rem; padding:1px 6px;">688</span>
+              </label>
+              <label class="cl-item">
+                <input type="checkbox" class="cl-option" data-group="tipo" value="MODIFICATORIO">
+                <span style="display:inline-flex; align-items:center; gap:6px;">
+                  <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#8b5cf6;"></span>
+                  <span>Modificatorio</span>
+                </span>
+                <span class="pill-badge" id="badge-tipo-mod" style="margin-left:auto; font-size:0.68rem; padding:1px 6px;">499</span>
+              </label>
+              <label class="cl-item">
+                <input type="checkbox" class="cl-option" data-group="tipo" value="MOD / AMP">
+                <span style="display:inline-flex; align-items:center; gap:6px;">
+                  <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#06b6d4;"></span>
+                  <span>Mod / Amp</span>
+                </span>
+                <span class="pill-badge" id="badge-tipo-modamp" style="margin-left:auto; font-size:0.68rem; padding:1px 6px;">165</span>
+              </label>
+              <label class="cl-item">
+                <input type="checkbox" class="cl-option" data-group="tipo" value="SIN_DATO">
+                <span style="display:inline-flex; align-items:center; gap:6px; color:#94a3b8;">
+                  <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#64748b;"></span>
+                  <span>Sin especificar</span>
+                </span>
+                <span class="pill-badge" id="badge-tipo-sindato" style="margin-left:auto; font-size:0.68rem; padding:1px 6px;">403</span>
+              </label>
+              <div style="height:1px; background:rgba(255,255,255,0.08); margin:6px 0;"></div>
+              <label class="cl-item" style="background:rgba(139,92,246,0.08); border-radius:4px; padding:5px 8px;">
+                <input type="checkbox" class="cl-option" data-group="tipo" value="PROPIEDAD_HORIZONTAL">
+                <span style="display:inline-flex; align-items:center; gap:6px; color:#c4b5fd; font-weight:600;">
+                  <span>🏢 Propiedad Horizontal</span>
+                </span>
+                <span class="pill-badge" id="badge-tipo-ph" style="margin-left:auto; font-size:0.68rem; padding:1px 6px; background:rgba(139,92,246,0.25); color:#ddd6fe;">988</span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Group 4: Zonal Administration (Checklist) -->
         <div class="filter-block">
           <label class="filter-block-label">Administración Zonal</label>
           <div class="checklist-filter" id="cl-zonal">
@@ -524,10 +588,10 @@
   </div>
 
   <!-- Standalone Data Bundle (permite abrir index.html directamente sin requerir servidor) -->
-  <script src="public/data/zonas_data.js?v=20261118_ph_sync"></script>
-  <script src="public/data/licencias_data.js?v=20261118_ph_sync"></script>
+  <script src="public/data/zonas_data.js?v=20261118_cl_tipo"></script>
+  <script src="public/data/licencias_data.js?v=20261118_cl_tipo"></script>
   <!-- App Logic -->
-  <script src="app.js?v=20261118_ph_sync"></script>
+  <script src="app.js?v=20261118_cl_tipo"></script>
 </body>
 
 </html>
