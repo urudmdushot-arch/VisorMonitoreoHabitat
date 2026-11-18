@@ -812,6 +812,54 @@ window.openPredioModal = function (predioNum) {
         const tColor = tipoBadgeColor[t.tipo_proyecto] || '#64748b';
         const isFirst = idx === 0;
 
+        // Fase 1: Entidad Colaboradora
+        const isF1Active = !!(t.fase1_ec && t.fase1_ec.tiene);
+        const f1Fecha = isF1Active
+          ? (t.fase1_ec.fecha_emision ? `Emisión: ${t.fase1_ec.fecha_emision}` : 'Sin fecha de emisión')
+          : 'Sin fecha de emisión';
+        const f1Area = t.fase1_ec?.area_bruta ? ` &bull; Área: ${t.fase1_ec.area_bruta.toLocaleString()} m²` : '';
+        const f1Entidad = isF1Active
+          ? `Entidad: ${t.fase1_ec.entidad || 'No especificada'}${t.fase1_ec.estado ? ' (' + t.fase1_ec.estado + ')' : ''}`
+          : 'Entidad: No especificada';
+
+        // Fase 2: Administración Zonal
+        const isF2Active = !!(t.fase2_az && t.fase2_az.tiene);
+        let f2Fechas = [];
+        if (t.fase2_az?.fecha_inicio) f2Fechas.push(`Ingreso: ${t.fase2_az.fecha_inicio}`);
+        if (t.fase2_az?.fecha_emision) f2Fechas.push(`Emisión: ${t.fase2_az.fecha_emision}`);
+        const f2FechasStr = f2Fechas.length > 0
+          ? f2Fechas.join(' &bull; ')
+          : (isF2Active ? 'Sin fecha de emisión' : 'Pendiente de emisión en Administración Zonal');
+
+        // Cálculo de días en ejecución
+        let diasTexto = '';
+        let dias = null;
+        if (t.fase2_az?.fecha_inicio && t.fase2_az?.fecha_emision) {
+          const d1 = new Date(t.fase2_az.fecha_inicio);
+          const d2 = new Date(t.fase2_az.fecha_emision);
+          if (!isNaN(d1) && !isNaN(d2)) {
+            dias = Math.max(0, Math.round((d2 - d1) / (1000 * 60 * 60 * 24)));
+          }
+        }
+        if (dias === null && p.dias_ejecucion_az !== undefined && p.dias_ejecucion_az !== null && p.dias_ejecucion_az !== '') {
+          dias = p.dias_ejecucion_az;
+        }
+        if (dias !== null && dias !== undefined && dias !== '') {
+          diasTexto = ` (${dias} días en ejecución)`;
+        }
+        const f2Zonal = isF2Active
+          ? `${t.fase2_az.ad_zonal || p.ad_zonal || 'Administración Zonal'}${diasTexto}${t.fase2_az.profesional ? '<br>Profesional: ' + t.fase2_az.profesional : ''}`
+          : 'Administración Zonal: No registrada';
+
+        // Fase 3: Agencia Metropolitana de Control (AMC)
+        const isF3Active = !!(t.fase3_amc && t.fase3_amc.tiene);
+        const f3Cert = isF3Active
+          ? `Certificado: ${t.fase3_amc.certificado || t.fase3_amc.registro || 'CCF Registrado'}`
+          : 'Pendiente de emisión en AMC';
+        const f3Resultado = isF3Active
+          ? `Resultado: <strong style="color:${t.fase3_amc.resultado === 'FAVORABLE' ? '#34d399' : '#f59e0b'};">${t.fase3_amc.resultado || 'FAVORABLE'}</strong>${t.fase3_amc.area_declarada ? ` &bull; Área: ${t.fase3_amc.area_declarada.toLocaleString()} m²` : ''}`
+          : 'Resultado: No registrado / En obra';
+
         return `
           <div class="dmc-tab-pane ${isFirst ? 'active' : ''}" id="dmc-pane-trace-${idx}">
             <!-- Encabezado de la Licencia / Trámite -->
@@ -833,52 +881,31 @@ window.openPredioModal = function (predioNum) {
               </div>
             </div>
 
-            <!-- Pipeline constructivo de 3 pasos (Fase 1 -> Fase 2 -> Fase 3) -->
-            <div class="dmc-section-title" style="margin-bottom:8px;">
-              <i data-lucide="git-merge" style="width:13px; height:13px; vertical-align:middle; margin-right:4px; color:#38bdf8;"></i>
-              Línea de Tiempo del Trámite
+            <!-- Línea de Tiempo del Trámite (Fase 1 -> Fase 2 -> Fase 3) -->
+            <div class="dmc-section-title" style="margin-bottom:12px; margin-top:4px;">
+              LÍNEA DE TIEMPO DEL TRÁMITE
             </div>
 
-            <div class="dmc-mini-pipeline" style="margin-bottom:14px;">
-              <!-- Paso 1: Entidad Colaboradora -->
-              <div class="dmc-pipeline-step ${t.fase1_ec ? 'done' : 'skipped'}">
-                <div class="dmc-pipeline-dot">${t.fase1_ec ? '✓' : '—'}</div>
-                <div class="dmc-pipeline-info">
-                  <span class="dmc-pipeline-title" style="color:${t.fase1_ec ? '#38bdf8' : '#94a3b8'};">Paso 1: Entidad Colaboradora (Fase 1 - SLUM)</span>
-                  <span class="dmc-pipeline-desc">
-                    ${t.fase1_ec
-                      ? `Certificado emitido por <strong>${t.fase1_ec.entidad || 'EC'}</strong> el ${t.fase1_ec.fecha_emision || 'N/A'}.<br>Estado: <span style="color:#34d399; font-weight:600;">${t.fase1_ec.estado || 'EMITIDO'}</span>${t.fase1_ec.area_bruta ? ` &bull; Área: ${t.fase1_ec.area_bruta.toLocaleString()} m²` : ''}`
-                      : `Sin registro en Entidad Colaboradora (ingreso directo a Fase 2 o predio histórico)`}
-                  </span>
-                </div>
+            <div class="dmc-timeline" style="margin-bottom:16px;">
+              <!-- Fase 1: Entidad Colaboradora -->
+              <div class="dmc-tl-step ${isF1Active ? 'active' : ''}">
+                <span class="dmc-tl-title">Fase 1: Entidad Colaboradora</span>
+                <span class="dmc-tl-date">${f1Fecha}${f1Area}</span>
+                <span class="dmc-tl-meta">${f1Entidad}</span>
               </div>
 
-              <!-- Paso 2: Licencia LMU Administración Zonal -->
-              <div class="dmc-pipeline-step ${t.fase2_az ? 'done' : (t.fase1_ec ? 'pending' : 'skipped')}">
-                <div class="dmc-pipeline-dot">${t.fase2_az ? '✓' : (t.fase1_ec ? '2' : '—')}</div>
-                <div class="dmc-pipeline-info">
-                  <span class="dmc-pipeline-title" style="color:${t.fase2_az ? '#34d399' : (t.fase1_ec ? '#fbbf24' : '#94a3b8')};">Paso 2: Licencia LMU - Administración Zonal (Fase 2)</span>
-                  <span class="dmc-pipeline-desc">
-                    ${t.fase2_az
-                      ? `Licencia: <strong style="color:#fff;">${t.fase2_az.licencia || 'S/N'}</strong> &bull; ${t.fase2_az.ad_zonal || 'AZ'}<br>
-                         Emisión: <strong>${t.fase2_az.fecha_emision || 'N/A'}</strong>${t.fase2_az.fecha_inicio ? ` (Ingreso: ${t.fase2_az.fecha_inicio})` : ''}${t.fase2_az.area_bruta ? ` &bull; Área: ${t.fase2_az.area_bruta.toLocaleString()} m²` : ''}${t.fase2_az.profesional ? `<br>Profesional: ${t.fase2_az.profesional}` : ''}`
-                      : (t.fase1_ec ? `<span style="color:#fbbf24;">Pendiente de emisión en Administración Zonal (Certificado EC emitido, aún no registra licencia AZ)</span>` : `Sin licencia AZ registrada`)}
-                  </span>
-                </div>
+              <!-- Fase 2: Administración Zonal -->
+              <div class="dmc-tl-step ${isF2Active ? 'active' : ''}">
+                <span class="dmc-tl-title">Fase 2: Administración Zonal</span>
+                <span class="dmc-tl-date">${f2FechasStr}</span>
+                <span class="dmc-tl-meta">${f2Zonal}</span>
               </div>
 
-              <!-- Paso 3: AMC Control Posterior -->
-              <div class="dmc-pipeline-step ${t.fase3_amc ? 'done' : (t.fase2_az ? 'pending' : 'skipped')}">
-                <div class="dmc-pipeline-dot">${t.fase3_amc ? '✓' : (t.fase2_az ? '3' : '—')}</div>
-                <div class="dmc-pipeline-info">
-                  <span class="dmc-pipeline-title" style="color:${t.fase3_amc ? '#a78bfa' : (t.fase2_az ? '#94a3b8' : '#64748b')};">Paso 3: Finalización Constructiva (Fase 3 - AMC)</span>
-                  <span class="dmc-pipeline-desc">
-                    ${t.fase3_amc
-                      ? `Certificado de Conformidad Final: <strong style="color:#fff;">${t.fase3_amc.certificado || t.fase3_amc.registro}</strong><br>
-                         Reg: ${t.fase3_amc.registro} &bull; Resultado: <span style="color:#34d399; font-weight:600;">${t.fase3_amc.resultado || 'FAVORABLE'}</span>${t.fase3_amc.etapa ? ` &bull; Etapa: ${t.fase3_amc.etapa}` : ''}${t.fase3_amc.area_declarada ? ` &bull; Área Declarada: ${t.fase3_amc.area_declarada.toLocaleString()} m²` : ''}`
-                      : (t.fase2_az ? `<span style="color:#94a3b8;">En obra / Pendiente de verificación e inspección final AMC</span>` : `Pendiente de fases previas`)}
-                  </span>
-                </div>
+              <!-- Fase 3: Agencia Metropolitana de Control (AMC) -->
+              <div class="dmc-tl-step ${isF3Active ? 'active' : ''}">
+                <span class="dmc-tl-title">Fase 3: Agencia Metropolitana de Control (AMC)</span>
+                <span class="dmc-tl-date">${f3Cert}</span>
+                <span class="dmc-tl-meta">${f3Resultado}</span>
               </div>
             </div>
           </div>
