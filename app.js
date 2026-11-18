@@ -1158,33 +1158,91 @@ function updateKpiCards() {
   document.getElementById('leg-count-f2').textContent = f2Stayed.toLocaleString();
   document.getElementById('leg-count-f3').textContent = f3Stayed.toLocaleString();
 
-  // Actualizar badges en la barra lateral de filtros
-  const elFaseAll = document.getElementById('badge-fase-all');
-  if (elFaseAll) elFaseAll.textContent = state.rawProjects.length.toLocaleString();
-  const elFase1 = document.getElementById('badge-fase-1');
-  if (elFase1) elFase1.textContent = state.rawProjects.filter(p => p.fase === 1).length.toLocaleString();
-  const elFase2 = document.getElementById('badge-fase-2');
-  if (elFase2) elFase2.textContent = state.rawProjects.filter(p => p.fase === 2).length.toLocaleString();
-  const elFase3 = document.getElementById('badge-fase-3');
-  if (elFase3) elFase3.textContent = state.rawProjects.filter(p => p.fase === 3).length.toLocaleString();
-  const elFaseFunnel = document.getElementById('badge-fase-funnel');
-  if (elFaseFunnel) elFaseFunnel.textContent = state.rawProjects.filter(p => p.in_ec && p.in_az && p.in_amc).length.toLocaleString();
-  const elLicLmu20 = document.getElementById('badge-filter-lic-lmu20');
-  if (elLicLmu20) elLicLmu20.textContent = state.rawProjects.length.toLocaleString();
+  // Pool contextual para badges de Fase (excluye solo el filtro de fase)
+  const poolParaFase = state.rawProjects.filter(p => {
+    if (state.filters.licencia !== 'all' && p.tipo_licencia !== state.filters.licencia) return false;
+    if (state.filters.tipo !== 'all' && state.filters.tipo.length > 0) {
+      const match = state.filters.tipo.some(v => {
+        if (v === 'PROPIEDAD_HORIZONTAL') return p.tiene_ph === true;
+        if (v === 'SIN_DATO') return !p.tipo_proyecto || p.tipo_proyecto.trim() === '';
+        return p.tipo_proyecto === v;
+      });
+      if (!match) return false;
+    }
+    if (state.filters.zonal !== 'all' && state.filters.zonal.length > 0) {
+      const pZonal = normStr(p.ad_zonal);
+      if (!state.filters.zonal.some(v => { const t = normStr(v); return pZonal.includes(t) || t.includes(pZonal); })) return false;
+    }
+    if (state.filters.entidad !== 'all' && state.filters.entidad.length > 0) {
+      const pEnt = normStr(p.entidad_colaboradora);
+      if (!state.filters.entidad.some(v => { const t = normStr(v); return pEnt.includes(t) || t.includes(pEnt); })) return false;
+    }
+    if (state.filters.anio !== 'all' && state.filters.anio.length > 0) {
+      if (!state.filters.anio.includes(String(p.year))) return false;
+    }
+    if (state.filters.query) {
+      const q = normStr(state.filters.query);
+      if (!String(p.predio).toLowerCase().includes(q) && !normStr(p.nombre_proyecto).includes(q)) return false;
+    }
+    return true;
+  });
 
-  // Badges checklist Tipo de Proyecto y PH
+  // Actualizar badges en la barra lateral de filtros (Fases del Flujo)
+  const elFaseAll = document.getElementById('badge-fase-all');
+  if (elFaseAll) elFaseAll.textContent = poolParaFase.length.toLocaleString();
+  const elFase1 = document.getElementById('badge-fase-1');
+  if (elFase1) elFase1.textContent = poolParaFase.filter(p => p.fase === 1).length.toLocaleString();
+  const elFase2 = document.getElementById('badge-fase-2');
+  if (elFase2) elFase2.textContent = poolParaFase.filter(p => p.fase === 2).length.toLocaleString();
+  const elFase3 = document.getElementById('badge-fase-3');
+  if (elFase3) elFase3.textContent = poolParaFase.filter(p => p.fase === 3).length.toLocaleString();
+  const elFaseFunnel = document.getElementById('badge-fase-funnel');
+  if (elFaseFunnel) elFaseFunnel.textContent = poolParaFase.filter(p => p.in_ec && p.in_az && p.in_amc).length.toLocaleString();
+  const elLicLmu20 = document.getElementById('badge-filter-lic-lmu20');
+  if (elLicLmu20) elLicLmu20.textContent = poolParaFase.length.toLocaleString();
+
+  // Pool contextual para badges de Tipo de Proyecto (excluye solo el filtro de tipo de proyecto)
+  // De esta manera, si se selecciona Fase 1, se muestran los proyectos de cada tipo en Fase 1
+  const poolParaTipo = state.rawProjects.filter(p => {
+    if (state.filters.licencia !== 'all' && p.tipo_licencia !== state.filters.licencia) return false;
+    if (state.filters.fase !== 'all') {
+      if (state.filters.fase === 'funnel') {
+        if (!(p.in_ec && p.in_az && p.in_amc)) return false;
+      } else {
+        if (p.fase !== parseInt(state.filters.fase)) return false;
+      }
+    }
+    if (state.filters.zonal !== 'all' && state.filters.zonal.length > 0) {
+      const pZonal = normStr(p.ad_zonal);
+      if (!state.filters.zonal.some(v => { const t = normStr(v); return pZonal.includes(t) || t.includes(pZonal); })) return false;
+    }
+    if (state.filters.entidad !== 'all' && state.filters.entidad.length > 0) {
+      const pEnt = normStr(p.entidad_colaboradora);
+      if (!state.filters.entidad.some(v => { const t = normStr(v); return pEnt.includes(t) || t.includes(pEnt); })) return false;
+    }
+    if (state.filters.anio !== 'all' && state.filters.anio.length > 0) {
+      if (!state.filters.anio.includes(String(p.year))) return false;
+    }
+    if (state.filters.query) {
+      const q = normStr(state.filters.query);
+      if (!String(p.predio).toLowerCase().includes(q) && !normStr(p.nombre_proyecto).includes(q)) return false;
+    }
+    return true;
+  });
+
+  // Badges checklist Tipo de Proyecto y PH reactivos a la fase activa
   const elTipoNuevo = document.getElementById('badge-tipo-nuevo');
-  if (elTipoNuevo) elTipoNuevo.textContent = state.rawProjects.filter(p => p.tipo_proyecto === 'NUEVO').length.toLocaleString();
+  if (elTipoNuevo) elTipoNuevo.textContent = poolParaTipo.filter(p => p.tipo_proyecto === 'NUEVO').length.toLocaleString();
   const elTipoAmp = document.getElementById('badge-tipo-amp');
-  if (elTipoAmp) elTipoAmp.textContent = state.rawProjects.filter(p => p.tipo_proyecto === 'AMPLIATORIO').length.toLocaleString();
+  if (elTipoAmp) elTipoAmp.textContent = poolParaTipo.filter(p => p.tipo_proyecto === 'AMPLIATORIO').length.toLocaleString();
   const elTipoMod = document.getElementById('badge-tipo-mod');
-  if (elTipoMod) elTipoMod.textContent = state.rawProjects.filter(p => p.tipo_proyecto === 'MODIFICATORIO').length.toLocaleString();
+  if (elTipoMod) elTipoMod.textContent = poolParaTipo.filter(p => p.tipo_proyecto === 'MODIFICATORIO').length.toLocaleString();
   const elTipoModAmp = document.getElementById('badge-tipo-modamp');
-  if (elTipoModAmp) elTipoModAmp.textContent = state.rawProjects.filter(p => p.tipo_proyecto === 'MOD / AMP').length.toLocaleString();
+  if (elTipoModAmp) elTipoModAmp.textContent = poolParaTipo.filter(p => p.tipo_proyecto === 'MOD / AMP' || p.tipo_proyecto === 'MOD/AMP').length.toLocaleString();
   const elTipoSinDato = document.getElementById('badge-tipo-sindato');
-  if (elTipoSinDato) elTipoSinDato.textContent = state.rawProjects.filter(p => !p.tipo_proyecto || p.tipo_proyecto.trim() === '').length.toLocaleString();
+  if (elTipoSinDato) elTipoSinDato.textContent = poolParaTipo.filter(p => !p.tipo_proyecto || p.tipo_proyecto.trim() === '').length.toLocaleString();
   const elTipoPh = document.getElementById('badge-tipo-ph');
-  if (elTipoPh) elTipoPh.textContent = state.rawProjects.filter(p => p.tiene_ph === true).length.toLocaleString();
+  if (elTipoPh) elTipoPh.textContent = poolParaTipo.filter(p => p.tiene_ph === true).length.toLocaleString();
 
   // Actualizar indicadores de filtros activos (LMU 20 es el alcance base)
   let activeFilterCount = 0;
