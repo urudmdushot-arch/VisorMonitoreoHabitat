@@ -366,7 +366,7 @@ public class FastTraceabilityBuilder
                 else if (matchAz != null)
                 {
                     faseActual = 2;
-                    estadoCiclo = "En Fase 2 (Licencia LMU Emitida)";
+                    estadoCiclo = "En Fase 2 (LMU Emitida)";
                     fase2Items++;
                 }
                 else

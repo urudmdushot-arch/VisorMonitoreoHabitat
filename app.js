@@ -868,15 +868,15 @@ window.openPredioModal = function (predioNum) {
                 <div style="flex:1; min-width:200px;">
                   <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
                     <span style="font-size:0.86rem; font-weight:700; color:#38bdf8;">
-                      ${t.fase2_az?.licencia ? `Licencia LMU: ${t.fase2_az.licencia}` : (t.fase1_ec?.expediente ? `Expediente EC: ${t.fase1_ec.expediente}` : (t.fase3_amc?.registro || 'Trámite Técnico'))}
+                      ${t.fase2_az?.licencia ? `No. Licencia: ${t.fase2_az.licencia}` : (t.fase1_ec?.expediente ? `No. Expediente: ${t.fase1_ec.expediente}` : (t.fase3_amc?.registro ? `No. Registro AMC: ${t.fase3_amc.registro}` : 'Trámite Técnico'))}
                     </span>
                     ${t.tipo_proyecto ? `<span style="font-size:0.68rem; font-weight:700; padding:1px 7px; border-radius:3px; background:${tColor}20; color:${tColor}; border:1px solid ${tColor}50;">${t.tipo_proyecto}</span>` : ''}
                   </div>
                   ${t.nombre_proyecto ? `<div style="font-size:0.8rem; color:#cbd5e1; margin-top:3px; font-weight:500;">${t.nombre_proyecto}</div>` : ''}
-                  ${t.expediente && (!t.fase2_az?.licencia || t.expediente !== t.fase2_az?.licencia) ? `<div style="font-size:0.72rem; color:#94a3b8; margin-top:2px;">Expediente SLUM: <code style="color:#7dd3fc;">${t.expediente}</code></div>` : ''}
+                  ${t.expediente && (!t.fase2_az?.licencia || t.expediente !== t.fase2_az?.licencia) ? `<div style="font-size:0.72rem; color:#94a3b8; margin-top:2px;">No. Expediente: <code style="color:#7dd3fc;">${t.expediente}</code></div>` : ''}
                 </div>
                 <span style="font-size:0.72rem; font-weight:700; padding:3px 10px; border-radius:12px; background:${badgeBg}; color:${badgeColor}; border:1px solid ${badgeBorder}; white-space:nowrap;">
-                  ${t.estado_ciclo}
+                  ${(t.estado_ciclo || '').replace(/Licencia LMU [Ee]mitida/g, 'LMU Emitida')}
                 </span>
               </div>
             </div>
