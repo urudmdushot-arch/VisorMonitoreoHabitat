@@ -541,7 +541,9 @@ function showPredioPopup(props, coordinates) {
   const tipoBadgeColor = {
     'NUEVO': '#10b981',
     'AMPLIATORIO': '#f59e0b',
-    'MODIFICATORIO': '#8b5cf6'
+    'MODIFICATORIO': '#8b5cf6',
+    'MOD / AMP': '#06b6d4',
+    'MOD/AMP': '#06b6d4'
   };
   const tipoProyecto = props.tipo_proyecto || null;
   const tipoBadge = tipoProyecto
@@ -740,7 +742,7 @@ window.openPredioModal = function (predioNum) {
               <span class="dmc-cert-badge ec">${c.entidad || 'Entidad Colaboradora'}</span>
             </div>
             <div class="dmc-cert-grid">
-              <span><strong>Tipo Proyecto:</strong> ${c.tipo_proyecto || 'NUEVO'}</span>
+              <span><strong>Tipo Proyecto:</strong> ${c.tipo_proyecto || 'No especificado'}</span>
               <span><strong>Fecha Emisión:</strong> ${c.fecha_emision || 'N/A'}</span>
               <span><strong>Estado:</strong> ${c.estado || 'EMITIDO'}</span>
               ${c.area_bruta ? `<span><strong>Área Bruta:</strong> ${c.area_bruta.toLocaleString()} m²</span>` : ''}
@@ -814,7 +816,7 @@ window.openPredioModal = function (predioNum) {
       <div class="dmc-grid">
         <div class="dmc-field"><span class="dmc-lbl">Clave Catastral:</span><span class="dmc-val">${p.clave_catastral || 'N/A'}</span></div>
         <div class="dmc-field"><span class="dmc-lbl">Parroquia:</span><span class="dmc-val">${p.parroquia || 'N/A'}</span></div>
-        <div class="dmc-field"><span class="dmc-lbl">Tipo de Proyecto:</span><span class="dmc-val" style="font-weight:700; color:${p.tipo_proyecto === 'NUEVO' ? '#10b981' : p.tipo_proyecto === 'AMPLIATORIO' ? '#f59e0b' : p.tipo_proyecto === 'MODIFICATORIO' ? '#8b5cf6' : '#94a3b8'}">${p.tipo_proyecto || 'No especificado'}</span></div>
+        <div class="dmc-field"><span class="dmc-lbl">Tipo de Proyecto:</span><span class="dmc-val" style="font-weight:700; color:${p.tipo_proyecto === 'NUEVO' ? '#10b981' : p.tipo_proyecto === 'AMPLIATORIO' ? '#f59e0b' : p.tipo_proyecto === 'MODIFICATORIO' ? '#8b5cf6' : p.tipo_proyecto === 'MOD / AMP' ? '#06b6d4' : '#94a3b8'}">${p.tipo_proyecto || 'No especificado'}</span></div>
         <div class="dmc-field"><span class="dmc-lbl">Área Bruta:</span><span class="dmc-val">${p.area_bruta ? p.area_bruta.toLocaleString() + ' m²' : 'N/A'}</span></div>
         <div class="dmc-field"><span class="dmc-lbl">Coordenadas WGS84:</span><span class="dmc-val">${p.lat.toFixed(5)}, ${p.lng.toFixed(5)}</span></div>
         <div class="dmc-field"><span class="dmc-lbl">Tiempo Transición (EC&rarr;AZ):</span><span class="dmc-val" style="color:#f59e0b">${p.dias_transicion ? p.dias_transicion + ' días' : 'Directo / No registrado'}</span></div>
@@ -1286,7 +1288,7 @@ function populateTable() {
         <td><a class="table-predio-link" onclick="locatePredioOnMap('${p.predio}')">${p.predio}</a></td>
         <td>${faseBadge}</td>
         <td><span style="font-weight:600">${p.tipo_licencia}</span></td>
-        <td><span style="font-size:0.75rem; font-weight:700; color:${p.tipo_proyecto === 'NUEVO' ? '#10b981' : p.tipo_proyecto === 'AMPLIATORIO' ? '#f59e0b' : p.tipo_proyecto === 'MODIFICATORIO' ? '#8b5cf6' : '#64748b'}">${p.tipo_proyecto || '-'}</span></td>
+        <td><span style="font-size:0.75rem; font-weight:700; color:${p.tipo_proyecto === 'NUEVO' ? '#10b981' : p.tipo_proyecto === 'AMPLIATORIO' ? '#f59e0b' : p.tipo_proyecto === 'MODIFICATORIO' ? '#8b5cf6' : p.tipo_proyecto === 'MOD / AMP' ? '#06b6d4' : '#64748b'}">${p.tipo_proyecto || '-'}</span></td>
         <td style="max-width:240px; overflow:hidden; text-overflow:ellipsis" title="${p.nombre_proyecto}">${p.nombre_proyecto || 'S/N'}</td>
         <td>${p.ad_zonal ? p.ad_zonal.replace('Administración Zonal ', 'AZ ') : '-'}</td>
         <td>${p.parroquia || '-'}</td>
