@@ -719,6 +719,18 @@ window.switchPredioTab = function (targetId, btn) {
 };
 
 /**
+ * Formatear área en m² con notación ecuatoriana (decimales con coma)
+ */
+function formatArea(val) {
+  if (val === null || val === undefined || isNaN(val) || Number(val) <= 0) return '0 m²';
+  const num = Number(val);
+  return num.toLocaleString('es-EC', {
+    minimumFractionDigits: (num % 1 !== 0 ? 2 : 0),
+    maximumFractionDigits: 2
+  }) + ' m²';
+}
+
+/**
  * Abrir Modal de Ficha Técnica Completa
  */
 window.openPredioModal = function (predioNum) {
@@ -817,7 +829,7 @@ window.openPredioModal = function (predioNum) {
         const f1Fecha = isF1Active
           ? (t.fase1_ec.fecha_emision ? `Emisión: ${t.fase1_ec.fecha_emision}` : 'Sin fecha de emisión')
           : 'Sin fecha de emisión';
-        const f1Area = t.fase1_ec?.area_bruta ? ` &bull; Área: ${t.fase1_ec.area_bruta.toLocaleString()} m²` : '';
+        const f1Area = t.fase1_ec?.area_bruta ? ` &bull; Área: ${formatArea(t.fase1_ec.area_bruta)}` : '';
         const f1Entidad = isF1Active
           ? `Entidad: ${t.fase1_ec.entidad || 'No especificada'}${t.fase1_ec.estado ? ' (' + t.fase1_ec.estado + ')' : ''}`
           : 'Entidad: No especificada';
@@ -827,9 +839,10 @@ window.openPredioModal = function (predioNum) {
         let f2Fechas = [];
         if (t.fase2_az?.fecha_inicio) f2Fechas.push(`Ingreso: ${t.fase2_az.fecha_inicio}`);
         if (t.fase2_az?.fecha_emision) f2Fechas.push(`Emisión: ${t.fase2_az.fecha_emision}`);
-        const f2FechasStr = f2Fechas.length > 0
+        const f2Area = t.fase2_az?.area_bruta ? ` &bull; Área: ${formatArea(t.fase2_az.area_bruta)}` : '';
+        const f2FechasStr = (f2Fechas.length > 0
           ? f2Fechas.join(' &bull; ')
-          : (isF2Active ? 'Sin fecha de emisión' : 'Pendiente de emisión en Administración Zonal');
+          : (isF2Active ? 'Sin fecha de emisión' : 'Pendiente de emisión en Administración Zonal')) + f2Area;
 
         // Cálculo de días en ejecución
         let diasTexto = '';
@@ -857,7 +870,7 @@ window.openPredioModal = function (predioNum) {
           ? `Certificado: ${t.fase3_amc.certificado || t.fase3_amc.registro || 'CCF Registrado'}`
           : 'Pendiente de emisión en AMC';
         const f3Resultado = isF3Active
-          ? `Resultado: <strong style="color:${t.fase3_amc.resultado === 'FAVORABLE' ? '#34d399' : '#f59e0b'};">${t.fase3_amc.resultado || 'FAVORABLE'}</strong>${t.fase3_amc.area_declarada ? ` &bull; Área: ${t.fase3_amc.area_declarada.toLocaleString()} m²` : ''}`
+          ? `Resultado: <strong style="color:${t.fase3_amc.resultado === 'FAVORABLE' ? '#34d399' : '#f59e0b'};">${t.fase3_amc.resultado || 'FAVORABLE'}</strong>${t.fase3_amc.area_declarada ? ` &bull; Área: ${formatArea(t.fase3_amc.area_declarada)}` : ''}`
           : 'Resultado: No registrado / En obra';
 
         return `
@@ -979,7 +992,7 @@ window.openPredioModal = function (predioNum) {
         <div class="dmc-field"><span class="dmc-lbl">Parroquia:</span><span class="dmc-val">${p.parroquia || 'N/A'}</span></div>
         <div class="dmc-field"><span class="dmc-lbl">Tipo de Proyecto:</span><span class="dmc-val" style="font-weight:700; color:${p.tipo_proyecto === 'NUEVO' ? '#10b981' : p.tipo_proyecto === 'AMPLIATORIO' ? '#f59e0b' : p.tipo_proyecto === 'MODIFICATORIO' ? '#8b5cf6' : p.tipo_proyecto === 'MOD / AMP' ? '#06b6d4' : '#94a3b8'}">${p.tipo_proyecto || 'No especificado'}</span></div>
         <div class="dmc-field"><span class="dmc-lbl">Propiedad Horizontal:</span><span class="dmc-val" style="font-weight:700; color:${p.tiene_ph ? phColor : '#64748b'};">${p.tiene_ph ? `Sí &bull; ${p.estado_ph || 'En trámite'}` : 'No registra trámite'}</span></div>
-        <div class="dmc-field"><span class="dmc-lbl">Área Bruta:</span><span class="dmc-val">${p.area_bruta ? p.area_bruta.toLocaleString() + ' m²' : 'N/A'}</span></div>
+        <div class="dmc-field"><span class="dmc-lbl">Área Bruta:</span><span class="dmc-val">${p.area_bruta ? formatArea(p.area_bruta) : 'N/A'}</span></div>
         <div class="dmc-field"><span class="dmc-lbl">Coordenadas WGS84:</span><span class="dmc-val">${p.lat ? p.lat.toFixed(5) : '0'}, ${p.lng ? p.lng.toFixed(5) : '0'}</span></div>
         <div class="dmc-field"><span class="dmc-lbl">Tiempo Transición (EC&rarr;AZ):</span><span class="dmc-val" style="color:#f59e0b">${p.dias_transicion ? p.dias_transicion + ' días' : 'Directo / No registrado'}</span></div>
       </div>
