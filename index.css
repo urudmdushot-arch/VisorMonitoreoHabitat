@@ -1577,8 +1577,8 @@ body {
 .detail-modal-overlay.hidden { display: none; }
 
 .detail-modal-card {
-  width: 580px;
-  max-width: 90vw;
+  width: 620px;
+  max-width: 92vw;
   max-height: 85vh;
   background: #0f172a;
   border: 1px solid rgba(255, 255, 255, 0.15);
@@ -1883,6 +1883,117 @@ body {
   font-size: 0.72rem;
   color: #94a3b8;
   line-height: 1.35;
+}
+
+/* Modal Tabs Navigation */
+.dmc-tabs-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow-x: auto;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 6px;
+  margin-bottom: 16px;
+  scrollbar-width: thin;
+}
+
+.dmc-tabs-header::-webkit-scrollbar {
+  height: 4px;
+}
+.dmc-tabs-header::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+}
+
+.dmc-tab-btn {
+  background: rgba(30, 41, 59, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  color: #94a3b8;
+  font-family: inherit;
+  font-size: 0.76rem;
+  font-weight: 600;
+  padding: 7px 12px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.dmc-tab-btn:hover {
+  color: #f8fafc;
+  background: rgba(51, 65, 85, 0.6);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.dmc-tab-btn.active {
+  color: #38bdf8;
+  background: rgba(56, 189, 248, 0.12);
+  border-color: rgba(56, 189, 248, 0.45);
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.15);
+}
+
+.dmc-tab-btn.tab-ph {
+  border-color: rgba(139, 92, 246, 0.25);
+}
+
+.dmc-tab-btn.tab-ph.active {
+  color: #c4b5fd;
+  background: rgba(139, 92, 246, 0.16);
+  border-color: rgba(139, 92, 246, 0.5);
+  box-shadow: 0 0 10px rgba(139, 92, 246, 0.2);
+}
+
+.dmc-tab-pill {
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #cbd5e1;
+}
+
+.dmc-tab-pill.pill-f1 {
+  background: rgba(245, 158, 11, 0.2);
+  color: #fbbf24;
+}
+
+.dmc-tab-pill.pill-f2 {
+  background: rgba(56, 189, 248, 0.2);
+  color: #38bdf8;
+}
+
+.dmc-tab-pill.pill-f3 {
+  background: rgba(16, 185, 129, 0.2);
+  color: #34d399;
+}
+
+.dmc-tab-pill.pill-ph {
+  background: rgba(139, 92, 246, 0.25);
+  color: #ddd6fe;
+}
+
+.dmc-tab-pane {
+  display: none;
+}
+
+.dmc-tab-pane.active {
+  display: block;
+  animation: dmcTabFadeIn 0.22s ease-out;
+}
+
+@keyframes dmcTabFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(3px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .dmc-footer {

@@ -703,6 +703,22 @@ function showZonalPopup(props, coordinates) {
 }
 
 /**
+ * Cambiar de pestaña activa dentro del modal de predio
+ */
+window.switchPredioTab = function (targetId, btn) {
+  const card = btn.closest('.detail-modal-card');
+  if (!card) return;
+  card.querySelectorAll('.dmc-tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  card.querySelectorAll('.dmc-tab-pane').forEach(p => p.classList.remove('active'));
+  const targetPane = card.querySelector(`#${targetId}`);
+  if (targetPane) {
+    targetPane.classList.add('active');
+  }
+  if (window.lucide) lucide.createIcons();
+};
+
+/**
  * Abrir Modal de Ficha Técnica Completa
  */
 window.openPredioModal = function (predioNum) {
@@ -712,192 +728,201 @@ window.openPredioModal = function (predioNum) {
   const modal = document.getElementById('detail-modal-overlay');
   const card = document.getElementById('detail-modal-card');
 
-  // Certificados AMC asociados
-  const certsAmc = p.certificados_amc || [];
-  const amcCertsHtml = certsAmc.length > 0 ? `
-    <div class="dmc-certs-section">
-      <div class="dmc-section-title" style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 0;">
-        <span><i data-lucide="shield-check" style="width:14px; height:14px; vertical-align:middle; margin-right:4px; color:#10b981;"></i> Certificados de Conformidad AMC (${certsAmc.length})</span>
-        <span style="font-size:0.72rem; color:#10b981; font-weight:600; text-transform:none;">Fase 3 &bull; Control Posterior</span>
-      </div>
-      <div class="dmc-certs-list">
-        ${certsAmc.map((c, idx) => `
-          <div class="dmc-cert-card">
-            <div class="dmc-cert-top">
-              <span class="dmc-cert-num">#${idx + 1} &bull; Reg: ${c.registro || 'S/N'}</span>
-              <span class="dmc-cert-badge ${c.resultado === 'FAVORABLE' ? 'favorable' : ''}">${c.resultado || 'FAVORABLE'}</span>
-            </div>
-            <div class="dmc-cert-grid">
-              <span><strong>Certificado / Informe:</strong> ${c.certificado || 'No registrado'}</span>
-              <span><strong>Especialidad:</strong> ${c.tipo || 'CCF EDIFICACIONES'}</span>
-              ${c.area_declarada ? `<span><strong>Área Declarada:</strong> ${c.area_declarada.toLocaleString()} m²</span>` : ''}
-              ${c.proyecto ? `<span><strong>Proyecto:</strong> ${c.proyecto}</span>` : ''}
-            </div>
-          </div>
-        `).join('')}
-      </div>
-    </div>
-  ` : '';
-
-  // Certificados / Trámites Entidades Colaboradoras
-  const certsEc = p.certificados_ec || [];
-  const ecCertsHtml = certsEc.length > 1 ? `
-    <div class="dmc-certs-section">
-      <div class="dmc-section-title" style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 0;">
-        <span><i data-lucide="clipboard-check" style="width:14px; height:14px; vertical-align:middle; margin-right:4px; color:#06b6d4;"></i> Trámites / Certificados EC (${certsEc.length})</span>
-        <span style="font-size:0.72rem; color:#06b6d4; font-weight:600; text-transform:none;">Fase 1 &bull; SLUM</span>
-      </div>
-      <div class="dmc-certs-list">
-        ${certsEc.map((c, idx) => `
-          <div class="dmc-cert-card">
-            <div class="dmc-cert-top">
-              <span class="dmc-cert-num">#${idx + 1} &bull; ${c.expediente || 'Expediente S/N'}</span>
-              <span class="dmc-cert-badge ec">${c.entidad || 'Entidad Colaboradora'}</span>
-            </div>
-            <div class="dmc-cert-grid">
-              <span><strong>Tipo Proyecto:</strong> ${c.tipo_proyecto || 'No especificado'}</span>
-              <span><strong>Fecha Emisión:</strong> ${c.fecha_emision || 'N/A'}</span>
-              <span><strong>Estado:</strong> ${c.estado || 'EMITIDO'}</span>
-              ${c.area_bruta ? `<span><strong>Área Bruta:</strong> ${c.area_bruta.toLocaleString()} m²</span>` : ''}
-            </div>
-          </div>
-        `).join('')}
-      </div>
-    </div>
-  ` : '';
-
-  // Trazabilidad por Expediente / Fase Constructiva
-  const trazabilidad = p.trazabilidad || [];
-  const trazabilidadHtml = trazabilidad.length > 0 ? `
-    <div class="dmc-certs-section" style="border-left: 3px solid #38bdf8;">
-      <div class="dmc-section-title" style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 8px;">
-        <span><i data-lucide="git-merge" style="width:14px; height:14px; vertical-align:middle; margin-right:4px; color:#38bdf8;"></i> Trazabilidad por Expediente / Fase Constructiva (${trazabilidad.length})</span>
-        <span style="font-size:0.72rem; color:#38bdf8; font-weight:600; text-transform:none;">Cruce Fase 1 (EC) &rarr; Fase 2 (AZ) &rarr; Fase 3 (AMC)</span>
-      </div>
-      <div style="display:flex; flex-direction:column; gap:10px;">
-        ${trazabilidad.map((t, idx) => {
-          let badgeBg = 'rgba(56,189,248,0.15)';
-          let badgeColor = '#38bdf8';
-          let badgeBorder = 'rgba(56,189,248,0.3)';
-          if (t.fase_actual === 3) {
-            badgeBg = 'rgba(16,185,129,0.15)';
-            badgeColor = '#34d399';
-            badgeBorder = 'rgba(16,185,129,0.35)';
-          } else if (t.fase_actual === 1) {
-            badgeBg = 'rgba(245,158,11,0.15)';
-            badgeColor = '#fbbf24';
-            badgeBorder = 'rgba(245,158,11,0.35)';
-          }
-
-          const tipoBadgeColor = {
-            'NUEVO': '#10b981',
-            'AMPLIATORIO': '#f59e0b',
-            'MODIFICATORIO': '#8b5cf6',
-            'MOD / AMP': '#06b6d4',
-            'MOD/AMP': '#06b6d4'
-          };
-          const tColor = tipoBadgeColor[t.tipo_proyecto] || '#64748b';
-
-          return `
-            <div class="dmc-trace-card">
-              <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px; flex-wrap:wrap;">
-                <div style="flex:1; min-width:200px;">
-                  <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
-                    <span style="font-size:0.8rem; font-weight:700; color:#38bdf8;">#${idx + 1} &bull; ${t.expediente || 'Expediente S/N'}</span>
-                    ${t.tipo_proyecto ? `<span style="font-size:0.65rem; font-weight:700; padding:1px 6px; border-radius:3px; background:${tColor}20; color:${tColor}; border:1px solid ${tColor}50;">${t.tipo_proyecto}</span>` : ''}
-                  </div>
-                  ${t.nombre_proyecto ? `<div style="font-size:0.75rem; color:#cbd5e1; margin-top:2px; font-weight:500;">${t.nombre_proyecto}</div>` : ''}
-                </div>
-                <span style="font-size:0.7rem; font-weight:700; padding:2px 8px; border-radius:12px; background:${badgeBg}; color:${badgeColor}; border:1px solid ${badgeBorder}; white-space:nowrap;">
-                  ${t.estado_ciclo}
-                </span>
-              </div>
-
-              <div class="dmc-mini-pipeline">
-                <!-- Paso 1: Entidad Colaboradora -->
-                <div class="dmc-pipeline-step ${t.fase1_ec ? 'done' : 'skipped'}">
-                  <div class="dmc-pipeline-dot">${t.fase1_ec ? '✓' : '—'}</div>
-                  <div class="dmc-pipeline-info">
-                    <span class="dmc-pipeline-title" style="color:${t.fase1_ec ? '#38bdf8' : '#94a3b8'};">Paso 1: Entidad Colaboradora (Fase 1 - SLUM)</span>
-                    <span class="dmc-pipeline-desc">
-                      ${t.fase1_ec
-                        ? `Certificado emitido por <strong>${t.fase1_ec.entidad || 'EC'}</strong> el ${t.fase1_ec.fecha_emision || 'N/A'}. Estado: <span style="color:#34d399; font-weight:600;">${t.fase1_ec.estado || 'EMITIDO'}</span>${t.fase1_ec.area_bruta ? ` &bull; Área: ${t.fase1_ec.area_bruta.toLocaleString()} m²` : ''}`
-                        : `Sin registro en Entidad Colaboradora (ingreso directo a Fase 2 o predio histórico)`}
-                    </span>
-                  </div>
-                </div>
-
-                <!-- Paso 2: Licencia LMU Administración Zonal -->
-                <div class="dmc-pipeline-step ${t.fase2_az ? 'done' : (t.fase1_ec ? 'pending' : 'skipped')}">
-                  <div class="dmc-pipeline-dot">${t.fase2_az ? '✓' : (t.fase1_ec ? '2' : '—')}</div>
-                  <div class="dmc-pipeline-info">
-                    <span class="dmc-pipeline-title" style="color:${t.fase2_az ? '#34d399' : (t.fase1_ec ? '#fbbf24' : '#94a3b8')};">Paso 2: Licencia LMU - Administración Zonal (Fase 2)</span>
-                    <span class="dmc-pipeline-desc">
-                      ${t.fase2_az
-                        ? `Licencia: <strong style="color:#fff;">${t.fase2_az.licencia || 'S/N'}</strong> &bull; ${t.fase2_az.ad_zonal || 'AZ'}<br>
-                           Emisión: <strong>${t.fase2_az.fecha_emision || 'N/A'}</strong>${t.fase2_az.fecha_inicio ? ` (Ingreso: ${t.fase2_az.fecha_inicio})` : ''}${t.fase2_az.area_bruta ? ` &bull; Área: ${t.fase2_az.area_bruta.toLocaleString()} m²` : ''}${t.fase2_az.profesional ? `<br>Profesional: ${t.fase2_az.profesional}` : ''}`
-                        : (t.fase1_ec ? `<span style="color:#fbbf24;">Pendiente de emisión en Administración Zonal (Certificado EC emitido, aún no registra licencia AZ)</span>` : `Sin licencia AZ registrada`)}
-                    </span>
-                  </div>
-                </div>
-
-                <!-- Paso 3: AMC Control Posterior -->
-                <div class="dmc-pipeline-step ${t.fase3_amc ? 'done' : (t.fase2_az ? 'pending' : 'skipped')}">
-                  <div class="dmc-pipeline-dot">${t.fase3_amc ? '✓' : (t.fase2_az ? '3' : '—')}</div>
-                  <div class="dmc-pipeline-info">
-                    <span class="dmc-pipeline-title" style="color:${t.fase3_amc ? '#a78bfa' : (t.fase2_az ? '#94a3b8' : '#64748b')};">Paso 3: Finalización Constructiva (Fase 3 - AMC)</span>
-                    <span class="dmc-pipeline-desc">
-                      ${t.fase3_amc
-                        ? `Certificado de Conformidad Final: <strong style="color:#fff;">${t.fase3_amc.certificado || t.fase3_amc.registro}</strong><br>
-                           Reg: ${t.fase3_amc.registro} &bull; Resultado: <span style="color:#34d399; font-weight:600;">${t.fase3_amc.resultado || 'FAVORABLE'}</span>${t.fase3_amc.etapa ? ` &bull; Etapa: ${t.fase3_amc.etapa}` : ''}${t.fase3_amc.area_declarada ? ` &bull; Área: ${t.fase3_amc.area_declarada.toLocaleString()} m²` : ''}`
-                        : (t.fase2_az ? `<span style="color:#94a3b8;">En proceso constructivo / Pendiente de verificación e inspección final AMC</span>` : `Pendiente de fases previas`)}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          `;
-        }).join('')}
-      </div>
-    </div>
-  ` : '';
-
   // Trámites de Propiedad Horizontal
   const tramitesPh = p.tramites_ph || [];
   const phColor = p.estado_ph === 'PENDIENTE' ? '#f59e0b' : p.estado_ph === 'TRAMITE ANULADO' ? '#ef4444' : '#8b5cf6';
-  const phHtmlSection = p.tiene_ph ? `
-    <div class="dmc-certs-section" style="border-left: 3px solid #8b5cf6;">
-      <div class="dmc-section-title" style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 0;">
-        <span><i data-lucide="building-2" style="width:14px; height:14px; vertical-align:middle; margin-right:4px; color:#8b5cf6;"></i> Propiedad Horizontal (${tramitesPh.length})</span>
-        <span class="dmc-cert-badge" style="background:${phColor}20; color:${phColor}; border:1px solid ${phColor}50; text-transform:none;">
-          ${p.estado_ph || 'En trámite'}
-        </span>
-      </div>
-      <div class="dmc-certs-list">
-        ${tramitesPh.map((t, idx) => `
-          <div class="dmc-cert-card" style="border-color:rgba(139,92,246,0.25);">
-            <div class="dmc-cert-top">
-              <span class="dmc-cert-num">#${idx + 1} &bull; ${t.expediente || t.licencia || 'Expediente PH'}</span>
-              <span class="dmc-cert-badge" style="background:${t.estado === 'PENDIENTE' ? '#f59e0b' : t.estado === 'TRAMITE ANULADO' ? '#ef4444' : '#8b5cf6'}20; color:${t.estado === 'PENDIENTE' ? '#fbbf24' : t.estado === 'TRAMITE ANULADO' ? '#f87171' : '#a78bfa'}; border:1px solid currentColor;">${t.estado}</span>
-            </div>
-            <div class="dmc-cert-grid">
-              ${t.licencia ? `<span><strong>Licencia PH:</strong> ${t.licencia}</span>` : ''}
-              <span><strong>Fecha Inicio:</strong> ${t.fecha_inicio || 'N/A'}</span>
-              ${t.estado_flujo ? `<span><strong>Estado Flujo:</strong> ${t.estado_flujo}</span>` : ''}
-              ${t.dias_ejecucion ? `<span><strong>Días Ejecución:</strong> ${t.dias_ejecucion} d</span>` : ''}
-              ${t.ad_zonal ? `<span><strong>Ad. Zonal:</strong> ${t.ad_zonal.replace('Administración Zonal ', 'AZ ')}</span>` : ''}
-              ${t.profesional ? `<span><strong>Profesional:</strong> ${t.profesional}</span>` : ''}
-            </div>
-            ${t.detalle ? `
-              <div style="margin-top:6px; font-size:0.75rem; color:#94a3b8; background:rgba(255,255,255,0.03); padding:6px 8px; border-radius:4px; border:1px solid rgba(255,255,255,0.05); line-height:1.35;">
-                <strong style="color:#cbd5e1;">Unidades / Destinos:</strong> ${t.detalle}
-              </div>
-            ` : ''}
-          </div>
-        `).join('')}
-      </div>
+
+  // Items de trazabilidad (cada uno representa una licencia, expediente o certificado independiente)
+  const trazabilidad = (p.trazabilidad && p.trazabilidad.length > 0) ? p.trazabilidad : [{
+    expediente: p.predio ? `Predio ${p.predio}` : 'S/N',
+    nombre_proyecto: p.nombre_proyecto || '',
+    tipo_proyecto: p.tipo_proyecto || '',
+    fase_actual: p.fase || 1,
+    estado_ciclo: p.estado_tramite || (p.in_amc ? 'Fase 3: Control Posterior' : (p.in_az ? 'Fase 2: Licencia Emitida' : 'Fase 1: EC')),
+    fase1_ec: p.in_ec ? { tiene: true, expediente: p.predio, entidad: p.entidad_colaboradora, fecha_emision: p.fecha_emision_ec, estado: 'EMITIDO', area_bruta: p.area_bruta } : null,
+    fase2_az: p.in_az ? { tiene: true, licencia: p.tipo_licencia, ad_zonal: p.ad_zonal, fecha_emision: p.fecha_emision_az, fecha_inicio: p.fecha_inicio_az, estado_tramite: p.estado_tramite, profesional: '', area_bruta: p.area_bruta } : null,
+    fase3_amc: p.in_amc ? { tiene: true, registro: p.amc_registro, certificado: p.amc_registro, resultado: p.amc_resultado || 'FAVORABLE', etapa: '0', area_declarada: p.area_bruta } : null
+  }];
+
+  const tipoBadgeColor = {
+    'NUEVO': '#10b981',
+    'AMPLIATORIO': '#f59e0b',
+    'MODIFICATORIO': '#8b5cf6',
+    'MOD / AMP': '#06b6d4',
+    'MOD/AMP': '#06b6d4'
+  };
+
+  const hasMultipleTabs = (trazabilidad.length > 1) || (trazabilidad.length >= 1 && p.tiene_ph);
+
+  // Barra de pestañas (solo cuando hay más de una licencia/trámite o PH)
+  const tabsNavHtml = hasMultipleTabs ? `
+    <div class="dmc-tabs-header">
+      ${trazabilidad.map((t, idx) => {
+        let label = `Trámite #${idx + 1}`;
+        let icon = 'file-text';
+        if (t.fase2_az?.licencia) {
+          label = `Lic. ${t.fase2_az.licencia}`;
+          icon = 'file-badge';
+        } else if (t.fase1_ec?.expediente) {
+          label = `Cert. EC #${idx + 1}`;
+          icon = 'clipboard-check';
+        } else if (t.fase3_amc?.registro) {
+          label = `AMC: ${t.fase3_amc.registro}`;
+          icon = 'shield-check';
+        }
+
+        const pillClass = t.fase_actual === 3 ? 'pill-f3' : (t.fase_actual === 2 ? 'pill-f2' : 'pill-f1');
+        const pillText = t.fase_actual === 3 ? 'Fase 3' : (t.fase_actual === 2 ? 'Fase 2' : 'Fase 1');
+
+        return `
+          <button class="dmc-tab-btn ${idx === 0 ? 'active' : ''}" onclick="switchPredioTab('dmc-pane-trace-${idx}', this)">
+            <i data-lucide="${icon}" style="width:13px; height:13px;"></i>
+            <span>${label}</span>
+            <span class="dmc-tab-pill ${pillClass}">${pillText}</span>
+          </button>
+        `;
+      }).join('')}
+      ${p.tiene_ph ? `
+        <button class="dmc-tab-btn tab-ph ${trazabilidad.length === 0 ? 'active' : ''}" onclick="switchPredioTab('dmc-pane-ph', this)">
+          <i data-lucide="building-2" style="width:13px; height:13px;"></i>
+          <span>Prop. Horizontal</span>
+          <span class="dmc-tab-pill pill-ph">${tramitesPh.length}</span>
+        </button>
+      ` : ''}
     </div>
   ` : '';
+
+  // Contenido de cada pestaña
+  const panesHtml = `
+    <div class="dmc-tabs-body">
+      ${trazabilidad.map((t, idx) => {
+        let badgeBg = 'rgba(56,189,248,0.15)';
+        let badgeColor = '#38bdf8';
+        let badgeBorder = 'rgba(56,189,248,0.3)';
+        if (t.fase_actual === 3) {
+          badgeBg = 'rgba(16,185,129,0.15)';
+          badgeColor = '#34d399';
+          badgeBorder = 'rgba(16,185,129,0.35)';
+        } else if (t.fase_actual === 1) {
+          badgeBg = 'rgba(245,158,11,0.15)';
+          badgeColor = '#fbbf24';
+          badgeBorder = 'rgba(245,158,11,0.35)';
+        }
+
+        const tColor = tipoBadgeColor[t.tipo_proyecto] || '#64748b';
+        const isFirst = idx === 0;
+
+        return `
+          <div class="dmc-tab-pane ${isFirst ? 'active' : ''}" id="dmc-pane-trace-${idx}">
+            <!-- Encabezado de la Licencia / Trámite -->
+            <div style="background:rgba(15,23,42,0.65); border:1px solid rgba(255,255,255,0.08); border-radius:8px; padding:12px 14px; margin-bottom:14px;">
+              <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px; flex-wrap:wrap;">
+                <div style="flex:1; min-width:200px;">
+                  <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+                    <span style="font-size:0.86rem; font-weight:700; color:#38bdf8;">
+                      ${t.fase2_az?.licencia ? `Licencia LMU: ${t.fase2_az.licencia}` : (t.fase1_ec?.expediente ? `Expediente EC: ${t.fase1_ec.expediente}` : (t.fase3_amc?.registro || 'Trámite Técnico'))}
+                    </span>
+                    ${t.tipo_proyecto ? `<span style="font-size:0.68rem; font-weight:700; padding:1px 7px; border-radius:3px; background:${tColor}20; color:${tColor}; border:1px solid ${tColor}50;">${t.tipo_proyecto}</span>` : ''}
+                  </div>
+                  ${t.nombre_proyecto ? `<div style="font-size:0.8rem; color:#cbd5e1; margin-top:3px; font-weight:500;">${t.nombre_proyecto}</div>` : ''}
+                  ${t.expediente && (!t.fase2_az?.licencia || t.expediente !== t.fase2_az?.licencia) ? `<div style="font-size:0.72rem; color:#94a3b8; margin-top:2px;">Expediente SLUM: <code style="color:#7dd3fc;">${t.expediente}</code></div>` : ''}
+                </div>
+                <span style="font-size:0.72rem; font-weight:700; padding:3px 10px; border-radius:12px; background:${badgeBg}; color:${badgeColor}; border:1px solid ${badgeBorder}; white-space:nowrap;">
+                  ${t.estado_ciclo}
+                </span>
+              </div>
+            </div>
+
+            <!-- Pipeline constructivo de 3 pasos (Fase 1 -> Fase 2 -> Fase 3) -->
+            <div class="dmc-section-title" style="margin-bottom:8px;">
+              <i data-lucide="git-merge" style="width:13px; height:13px; vertical-align:middle; margin-right:4px; color:#38bdf8;"></i>
+              Línea de Tiempo del Trámite
+            </div>
+
+            <div class="dmc-mini-pipeline" style="margin-bottom:14px;">
+              <!-- Paso 1: Entidad Colaboradora -->
+              <div class="dmc-pipeline-step ${t.fase1_ec ? 'done' : 'skipped'}">
+                <div class="dmc-pipeline-dot">${t.fase1_ec ? '✓' : '—'}</div>
+                <div class="dmc-pipeline-info">
+                  <span class="dmc-pipeline-title" style="color:${t.fase1_ec ? '#38bdf8' : '#94a3b8'};">Paso 1: Entidad Colaboradora (Fase 1 - SLUM)</span>
+                  <span class="dmc-pipeline-desc">
+                    ${t.fase1_ec
+                      ? `Certificado emitido por <strong>${t.fase1_ec.entidad || 'EC'}</strong> el ${t.fase1_ec.fecha_emision || 'N/A'}.<br>Estado: <span style="color:#34d399; font-weight:600;">${t.fase1_ec.estado || 'EMITIDO'}</span>${t.fase1_ec.area_bruta ? ` &bull; Área: ${t.fase1_ec.area_bruta.toLocaleString()} m²` : ''}`
+                      : `Sin registro en Entidad Colaboradora (ingreso directo a Fase 2 o predio histórico)`}
+                  </span>
+                </div>
+              </div>
+
+              <!-- Paso 2: Licencia LMU Administración Zonal -->
+              <div class="dmc-pipeline-step ${t.fase2_az ? 'done' : (t.fase1_ec ? 'pending' : 'skipped')}">
+                <div class="dmc-pipeline-dot">${t.fase2_az ? '✓' : (t.fase1_ec ? '2' : '—')}</div>
+                <div class="dmc-pipeline-info">
+                  <span class="dmc-pipeline-title" style="color:${t.fase2_az ? '#34d399' : (t.fase1_ec ? '#fbbf24' : '#94a3b8')};">Paso 2: Licencia LMU - Administración Zonal (Fase 2)</span>
+                  <span class="dmc-pipeline-desc">
+                    ${t.fase2_az
+                      ? `Licencia: <strong style="color:#fff;">${t.fase2_az.licencia || 'S/N'}</strong> &bull; ${t.fase2_az.ad_zonal || 'AZ'}<br>
+                         Emisión: <strong>${t.fase2_az.fecha_emision || 'N/A'}</strong>${t.fase2_az.fecha_inicio ? ` (Ingreso: ${t.fase2_az.fecha_inicio})` : ''}${t.fase2_az.area_bruta ? ` &bull; Área: ${t.fase2_az.area_bruta.toLocaleString()} m²` : ''}${t.fase2_az.profesional ? `<br>Profesional: ${t.fase2_az.profesional}` : ''}`
+                      : (t.fase1_ec ? `<span style="color:#fbbf24;">Pendiente de emisión en Administración Zonal (Certificado EC emitido, aún no registra licencia AZ)</span>` : `Sin licencia AZ registrada`)}
+                  </span>
+                </div>
+              </div>
+
+              <!-- Paso 3: AMC Control Posterior -->
+              <div class="dmc-pipeline-step ${t.fase3_amc ? 'done' : (t.fase2_az ? 'pending' : 'skipped')}">
+                <div class="dmc-pipeline-dot">${t.fase3_amc ? '✓' : (t.fase2_az ? '3' : '—')}</div>
+                <div class="dmc-pipeline-info">
+                  <span class="dmc-pipeline-title" style="color:${t.fase3_amc ? '#a78bfa' : (t.fase2_az ? '#94a3b8' : '#64748b')};">Paso 3: Finalización Constructiva (Fase 3 - AMC)</span>
+                  <span class="dmc-pipeline-desc">
+                    ${t.fase3_amc
+                      ? `Certificado de Conformidad Final: <strong style="color:#fff;">${t.fase3_amc.certificado || t.fase3_amc.registro}</strong><br>
+                         Reg: ${t.fase3_amc.registro} &bull; Resultado: <span style="color:#34d399; font-weight:600;">${t.fase3_amc.resultado || 'FAVORABLE'}</span>${t.fase3_amc.etapa ? ` &bull; Etapa: ${t.fase3_amc.etapa}` : ''}${t.fase3_amc.area_declarada ? ` &bull; Área Declarada: ${t.fase3_amc.area_declarada.toLocaleString()} m²` : ''}`
+                      : (t.fase2_az ? `<span style="color:#94a3b8;">En obra / Pendiente de verificación e inspección final AMC</span>` : `Pendiente de fases previas`)}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('')}
+
+      <!-- Pestaña de Propiedad Horizontal (si aplica) -->
+      ${p.tiene_ph ? `
+        <div class="dmc-tab-pane ${trazabilidad.length === 0 ? 'active' : ''}" id="dmc-pane-ph">
+          <div class="dmc-certs-section" style="border-left: 3px solid #8b5cf6; margin-top:0;">
+            <div class="dmc-section-title" style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 0;">
+              <span><i data-lucide="building-2" style="width:14px; height:14px; vertical-align:middle; margin-right:4px; color:#8b5cf6;"></i> Propiedad Horizontal (${tramitesPh.length})</span>
+              <span class="dmc-cert-badge" style="background:${phColor}20; color:${phColor}; border:1px solid ${phColor}50; text-transform:none;">
+                ${p.estado_ph || 'En trámite'}
+              </span>
+            </div>
+            <div class="dmc-certs-list">
+              ${tramitesPh.map((t, idx) => `
+                <div class="dmc-cert-card" style="border-color:rgba(139,92,246,0.25);">
+                  <div class="dmc-cert-top">
+                    <span class="dmc-cert-num">#${idx + 1} &bull; ${t.expediente || t.licencia || 'Expediente PH'}</span>
+                    <span class="dmc-cert-badge" style="background:${t.estado === 'PENDIENTE' ? '#f59e0b' : t.estado === 'TRAMITE ANULADO' ? '#ef4444' : '#8b5cf6'}20; color:${t.estado === 'PENDIENTE' ? '#fbbf24' : t.estado === 'TRAMITE ANULADO' ? '#f87171' : '#a78bfa'}; border:1px solid currentColor;">${t.estado}</span>
+                  </div>
+                  <div class="dmc-cert-grid">
+                    ${t.licencia ? `<span><strong>Licencia PH:</strong> ${t.licencia}</span>` : ''}
+                    <span><strong>Fecha Inicio:</strong> ${t.fecha_inicio || 'N/A'}</span>
+                    ${t.estado_flujo ? `<span><strong>Estado Flujo:</strong> ${t.estado_flujo}</span>` : ''}
+                    ${t.dias_ejecucion ? `<span><strong>Días Ejecución:</strong> ${t.dias_ejecucion} d</span>` : ''}
+                    ${t.ad_zonal ? `<span><strong>Ad. Zonal:</strong> ${t.ad_zonal.replace('Administración Zonal ', 'AZ ')}</span>` : ''}
+                    ${t.profesional ? `<span><strong>Profesional:</strong> ${t.profesional}</span>` : ''}
+                  </div>
+                  ${t.detalle ? `
+                    <div style="margin-top:6px; font-size:0.75rem; color:#94a3b8; background:rgba(255,255,255,0.03); padding:6px 8px; border-radius:4px; border:1px solid rgba(255,255,255,0.05); line-height:1.35;">
+                      <strong style="color:#cbd5e1;">Unidades / Destinos:</strong> ${t.detalle}
+                    </div>
+                  ` : ''}
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        </div>
+      ` : ''}
+    </div>
+  `;
 
   card.innerHTML = `
     <div class="dmc-header">
@@ -908,55 +933,18 @@ window.openPredioModal = function (predioNum) {
       <button class="icon-btn" onclick="closePredioModal()"><i data-lucide="x"></i></button>
     </div>
     <div class="dmc-body">
-      <div>
-        <h4 style="font-family: var(--font-heading); font-size: 1.1rem; color: #fff; margin-bottom: 4px;">
-          ${p.nombre_proyecto || 'Sin Nombre Registrado'}
-        </h4>
-        <p style="color: #94a3b8; font-size: 0.85rem;">Parroquia: <strong style="color: #fff;">${p.parroquia || 'N/A'}</strong></p>
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px; flex-wrap:wrap; margin-bottom: 4px;">
+        <div>
+          <h4 style="font-family: var(--font-heading); font-size: 1.15rem; color: #fff; margin-bottom: 4px;">
+            ${p.nombre_proyecto || 'Sin Nombre Registrado'}
+          </h4>
+          <p style="color: #94a3b8; font-size: 0.85rem;">Parroquia: <strong style="color: #fff;">${p.parroquia || 'N/A'}</strong></p>
+        </div>
+        ${hasMultipleTabs ? `<div style="font-size:0.75rem; color:#38bdf8; font-weight:600; padding:4px 9px; border-radius:6px; background:rgba(56,189,248,0.1); border:1px solid rgba(56,189,248,0.25); display:inline-flex; align-items:center; gap:5px;"><i data-lucide="layers" style="width:12px; height:12px;"></i> ${trazabilidad.length} licencias/trámites</div>` : ''}
       </div>
 
-      <div class="dmc-section-title">Línea de Tiempo del Trámite</div>
-      <div class="dmc-timeline">
-        <div class="dmc-tl-step ${p.in_ec ? 'active' : ''}">
-          <span class="dmc-tl-title">Fase 1: Entidad Colaboradora</span>
-          <span class="dmc-tl-date">
-            ${certsEc.length > 1
-      ? `<strong style="color:#38bdf8">${certsEc.length} Trámites / Certificados Registrados</strong>`
-      : (p.fecha_emision_ec ? `Emitido el: ${p.fecha_emision_ec}` : 'Sin fecha de emisión')}
-          </span>
-          <span class="dmc-tl-meta">
-            ${certsEc.length > 1
-      ? 'Múltiples actuaciones técnicas SLUM registradas (ver desglose abajo)'
-      : `Entidad: ${p.entidad_colaboradora || 'No especificada'}`}
-          </span>
-        </div>
-        <div class="dmc-tl-step ${p.in_az ? 'active' : ''}">
-          <span class="dmc-tl-title">Fase 2: Administración Zonal</span>
-          <span class="dmc-tl-date">
-            ${p.fecha_inicio_az ? `Ingreso: ${p.fecha_inicio_az}` : ''} 
-            ${p.fecha_emision_az ? ` &bull; Emisión: ${p.fecha_emision_az}` : ''}
-          </span>
-          <span class="dmc-tl-meta">
-            ${p.ad_zonal || 'Sin Zonal'} ${p.dias_ejecucion_az ? `(${p.dias_ejecucion_az} días en ejecución)` : ''}
-          </span>
-        </div>
-        <div class="dmc-tl-step ${p.in_amc ? 'active' : ''}">
-          <span class="dmc-tl-title">Fase 3: Agencia Metropolitana de Control (AMC)</span>
-          <span class="dmc-tl-date">
-            ${certsAmc.length > 1
-      ? `<strong style="color:#10b981">${certsAmc.length} Certificados de Conformidad Emitidos</strong>`
-      : (p.amc_registro ? `Certificado: ${p.amc_registro}` : 'Pendiente de emisión en AMC')}
-          </span>
-          <span class="dmc-tl-meta">
-            ${certsAmc.length > 1
-      ? 'Múltiples especialidades constructivas aprobadas (ver desglose abajo)'
-      : (p.amc_resultado ? `Resultado: ${p.amc_resultado}` : '')}
-          </span>
-        </div>
-      </div>
-
-      ${trazabilidadHtml ? trazabilidadHtml : `${amcCertsHtml}${ecCertsHtml}`}
-      ${phHtmlSection}
+      ${tabsNavHtml}
+      ${panesHtml}
 
       <div class="dmc-section-title">Datos Catastrales y Geográficos</div>
       <div class="dmc-grid">
@@ -965,7 +953,7 @@ window.openPredioModal = function (predioNum) {
         <div class="dmc-field"><span class="dmc-lbl">Tipo de Proyecto:</span><span class="dmc-val" style="font-weight:700; color:${p.tipo_proyecto === 'NUEVO' ? '#10b981' : p.tipo_proyecto === 'AMPLIATORIO' ? '#f59e0b' : p.tipo_proyecto === 'MODIFICATORIO' ? '#8b5cf6' : p.tipo_proyecto === 'MOD / AMP' ? '#06b6d4' : '#94a3b8'}">${p.tipo_proyecto || 'No especificado'}</span></div>
         <div class="dmc-field"><span class="dmc-lbl">Propiedad Horizontal:</span><span class="dmc-val" style="font-weight:700; color:${p.tiene_ph ? phColor : '#64748b'};">${p.tiene_ph ? `Sí &bull; ${p.estado_ph || 'En trámite'}` : 'No registra trámite'}</span></div>
         <div class="dmc-field"><span class="dmc-lbl">Área Bruta:</span><span class="dmc-val">${p.area_bruta ? p.area_bruta.toLocaleString() + ' m²' : 'N/A'}</span></div>
-        <div class="dmc-field"><span class="dmc-lbl">Coordenadas WGS84:</span><span class="dmc-val">${p.lat.toFixed(5)}, ${p.lng.toFixed(5)}</span></div>
+        <div class="dmc-field"><span class="dmc-lbl">Coordenadas WGS84:</span><span class="dmc-val">${p.lat ? p.lat.toFixed(5) : '0'}, ${p.lng ? p.lng.toFixed(5) : '0'}</span></div>
         <div class="dmc-field"><span class="dmc-lbl">Tiempo Transición (EC&rarr;AZ):</span><span class="dmc-val" style="color:#f59e0b">${p.dias_transicion ? p.dias_transicion + ' días' : 'Directo / No registrado'}</span></div>
       </div>
     </div>
@@ -980,6 +968,7 @@ window.openPredioModal = function (predioNum) {
   modal.classList.remove('hidden');
   if (window.lucide) lucide.createIcons();
 };
+
 
 window.closePredioModal = function () {
   document.getElementById('detail-modal-overlay').classList.add('hidden');
