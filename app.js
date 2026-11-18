@@ -776,7 +776,7 @@ window.openPredioModal = function (predioNum) {
 
         return `
           <button class="dmc-tab-btn ${idx === 0 ? 'active' : ''}" onclick="switchPredioTab('dmc-pane-trace-${idx}', this)">
-            <i data-lucide="${icon}" style="width:13px; height:13px;"></i>
+            <i data-lucide="${icon}" style="width:16px; height:16px;"></i>
             <span>${label}</span>
             <span class="dmc-tab-pill ${pillClass}">${pillText}</span>
           </button>
@@ -784,7 +784,7 @@ window.openPredioModal = function (predioNum) {
       }).join('')}
       ${p.tiene_ph ? `
         <button class="dmc-tab-btn tab-ph ${trazabilidad.length === 0 ? 'active' : ''}" onclick="switchPredioTab('dmc-pane-ph', this)">
-          <i data-lucide="building-2" style="width:13px; height:13px;"></i>
+          <i data-lucide="building-2" style="width:16px; height:16px;"></i>
           <span>Prop. Horizontal</span>
           <span class="dmc-tab-pill pill-ph">${tramitesPh.length}</span>
         </button>
