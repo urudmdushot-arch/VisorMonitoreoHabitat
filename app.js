@@ -53,6 +53,7 @@ const state = {
     entidades: null,
     tiempos: null
   },
+  indCharts: {},
   filters: {
     licencia: 'LMU 20',
     fase: 'all',
@@ -770,30 +771,30 @@ window.openPredioModal = function (predioNum) {
   const tabsNavHtml = hasMultipleTabs ? `
     <div class="dmc-tabs-header">
       ${trazabilidad.map((t, idx) => {
-        let label = `Trámite #${idx + 1}`;
-        let icon = 'file-text';
-        if (t.fase2_az?.licencia) {
-          label = `Lic. ${t.fase2_az.licencia}`;
-          icon = 'file-badge';
-        } else if (t.fase1_ec?.expediente) {
-          label = `Cert. EC #${idx + 1}`;
-          icon = 'clipboard-check';
-        } else if (t.fase3_amc?.registro) {
-          label = `AMC: ${t.fase3_amc.registro}`;
-          icon = 'shield-check';
-        }
+    let label = `Trámite #${idx + 1}`;
+    let icon = 'file-text';
+    if (t.fase2_az?.licencia) {
+      label = `Lic. ${t.fase2_az.licencia}`;
+      icon = 'file-badge';
+    } else if (t.fase1_ec?.expediente) {
+      label = `Cert. EC #${idx + 1}`;
+      icon = 'clipboard-check';
+    } else if (t.fase3_amc?.registro) {
+      label = `AMC: ${t.fase3_amc.registro}`;
+      icon = 'shield-check';
+    }
 
-        const pillClass = t.fase_actual === 3 ? 'pill-f3' : (t.fase_actual === 2 ? 'pill-f2' : 'pill-f1');
-        const pillText = t.fase_actual === 3 ? 'Fase 3' : (t.fase_actual === 2 ? 'Fase 2' : 'Fase 1');
+    const pillClass = t.fase_actual === 3 ? 'pill-f3' : (t.fase_actual === 2 ? 'pill-f2' : 'pill-f1');
+    const pillText = t.fase_actual === 3 ? 'Fase 3' : (t.fase_actual === 2 ? 'Fase 2' : 'Fase 1');
 
-        return `
+    return `
           <button class="dmc-tab-btn ${idx === 0 ? 'active' : ''}" onclick="switchPredioTab('dmc-pane-trace-${idx}', this)">
             <i data-lucide="${icon}" style="width:16px; height:16px;"></i>
             <span>${label}</span>
             <span class="dmc-tab-pill ${pillClass}">${pillText}</span>
           </button>
         `;
-      }).join('')}
+  }).join('')}
       ${p.tiene_ph ? `
         <button class="dmc-tab-btn tab-ph ${trazabilidad.length === 0 ? 'active' : ''}" onclick="switchPredioTab('dmc-pane-ph', this)">
           <i data-lucide="building-2" style="width:16px; height:16px;"></i>
@@ -808,72 +809,72 @@ window.openPredioModal = function (predioNum) {
   const panesHtml = `
     <div class="dmc-tabs-body">
       ${trazabilidad.map((t, idx) => {
-        let badgeBg = 'rgba(56,189,248,0.15)';
-        let badgeColor = '#38bdf8';
-        let badgeBorder = 'rgba(56,189,248,0.3)';
-        if (t.fase_actual === 3) {
-          badgeBg = 'rgba(16,185,129,0.15)';
-          badgeColor = '#34d399';
-          badgeBorder = 'rgba(16,185,129,0.35)';
-        } else if (t.fase_actual === 1) {
-          badgeBg = 'rgba(245,158,11,0.15)';
-          badgeColor = '#fbbf24';
-          badgeBorder = 'rgba(245,158,11,0.35)';
-        }
+    let badgeBg = 'rgba(56,189,248,0.15)';
+    let badgeColor = '#38bdf8';
+    let badgeBorder = 'rgba(56,189,248,0.3)';
+    if (t.fase_actual === 3) {
+      badgeBg = 'rgba(16,185,129,0.15)';
+      badgeColor = '#34d399';
+      badgeBorder = 'rgba(16,185,129,0.35)';
+    } else if (t.fase_actual === 1) {
+      badgeBg = 'rgba(245,158,11,0.15)';
+      badgeColor = '#fbbf24';
+      badgeBorder = 'rgba(245,158,11,0.35)';
+    }
 
-        const tColor = tipoBadgeColor[t.tipo_proyecto] || '#64748b';
-        const isFirst = idx === 0;
+    const tColor = tipoBadgeColor[t.tipo_proyecto] || '#64748b';
+    const isFirst = idx === 0;
 
-        // Fase 1: Entidad Colaboradora
-        const isF1Active = !!(t.fase1_ec && t.fase1_ec.tiene);
-        const f1Fecha = isF1Active
-          ? (t.fase1_ec.fecha_emision ? `Emisión: ${t.fase1_ec.fecha_emision}` : 'Sin fecha de emisión')
-          : 'Sin fecha de emisión';
-        const f1Area = t.fase1_ec?.area_bruta ? ` &bull; Área: ${formatArea(t.fase1_ec.area_bruta)}` : '';
-        const f1Entidad = isF1Active
-          ? `Entidad: ${t.fase1_ec.entidad || 'No especificada'}${t.fase1_ec.estado ? ' (' + t.fase1_ec.estado + ')' : ''}`
-          : 'Entidad: No especificada';
+    // Fase 1: Entidad Colaboradora
+    const isF1Active = !!(t.fase1_ec && t.fase1_ec.tiene);
+    const f1Fecha = isF1Active
+      ? (t.fase1_ec.fecha_emision ? `Emisión: ${t.fase1_ec.fecha_emision}` : 'Sin fecha de emisión')
+      : 'Sin fecha de emisión';
+    const f1Area = t.fase1_ec?.area_bruta ? ` &bull; Área: ${formatArea(t.fase1_ec.area_bruta)}` : '';
+    const f1Entidad = isF1Active
+      ? `Entidad: ${t.fase1_ec.entidad || 'No especificada'}${t.fase1_ec.estado ? ' (' + t.fase1_ec.estado + ')' : ''}`
+      : 'Entidad: No especificada';
 
-        // Fase 2: Administración Zonal
-        const isF2Active = !!(t.fase2_az && t.fase2_az.tiene);
-        let f2Fechas = [];
-        if (t.fase2_az?.fecha_inicio) f2Fechas.push(`Ingreso: ${t.fase2_az.fecha_inicio}`);
-        if (t.fase2_az?.fecha_emision) f2Fechas.push(`Emisión: ${t.fase2_az.fecha_emision}`);
-        const f2Area = t.fase2_az?.area_bruta ? ` &bull; Área: ${formatArea(t.fase2_az.area_bruta)}` : '';
-        const f2FechasStr = (f2Fechas.length > 0
-          ? f2Fechas.join(' &bull; ')
-          : (isF2Active ? 'Sin fecha de emisión' : 'Pendiente de emisión en Administración Zonal')) + f2Area;
+    // Fase 2: Administración Zonal
+    const isF2Active = !!(t.fase2_az && t.fase2_az.tiene);
+    let f2Fechas = [];
+    if (t.fase2_az?.fecha_inicio) f2Fechas.push(`Ingreso: ${t.fase2_az.fecha_inicio}`);
+    if (t.fase2_az?.fecha_emision) f2Fechas.push(`Emisión: ${t.fase2_az.fecha_emision}`);
+    const f2Area = t.fase2_az?.area_bruta ? ` &bull; Área: ${formatArea(t.fase2_az.area_bruta)}` : '';
+    const f2FechasStr = (f2Fechas.length > 0
+      ? f2Fechas.join(' &bull; ')
+      : (isF2Active ? 'Sin fecha de emisión' : 'Pendiente de emisión en Administración Zonal')) + f2Area;
 
-        // Cálculo de días en ejecución
-        let diasTexto = '';
-        let dias = null;
-        if (t.fase2_az?.fecha_inicio && t.fase2_az?.fecha_emision) {
-          const d1 = new Date(t.fase2_az.fecha_inicio);
-          const d2 = new Date(t.fase2_az.fecha_emision);
-          if (!isNaN(d1) && !isNaN(d2)) {
-            dias = Math.max(0, Math.round((d2 - d1) / (1000 * 60 * 60 * 24)));
-          }
-        }
-        if (dias === null && p.dias_ejecucion_az !== undefined && p.dias_ejecucion_az !== null && p.dias_ejecucion_az !== '') {
-          dias = p.dias_ejecucion_az;
-        }
-        if (dias !== null && dias !== undefined && dias !== '') {
-          diasTexto = ` (${dias} días en ejecución)`;
-        }
-        const f2Zonal = isF2Active
-          ? `${t.fase2_az.ad_zonal || p.ad_zonal || 'Administración Zonal'}${diasTexto}${t.fase2_az.profesional ? '<br>Profesional: ' + t.fase2_az.profesional : ''}`
-          : 'Administración Zonal: No registrada';
+    // Cálculo de días en ejecución
+    let diasTexto = '';
+    let dias = null;
+    if (t.fase2_az?.fecha_inicio && t.fase2_az?.fecha_emision) {
+      const d1 = new Date(t.fase2_az.fecha_inicio);
+      const d2 = new Date(t.fase2_az.fecha_emision);
+      if (!isNaN(d1) && !isNaN(d2)) {
+        dias = Math.max(0, Math.round((d2 - d1) / (1000 * 60 * 60 * 24)));
+      }
+    }
+    if (dias === null && p.dias_ejecucion_az !== undefined && p.dias_ejecucion_az !== null && p.dias_ejecucion_az !== '') {
+      dias = p.dias_ejecucion_az;
+    }
+    if (dias !== null && dias !== undefined && dias !== '') {
+      diasTexto = ` (${dias} días en ejecución)`;
+    }
+    const f2Zonal = isF2Active
+      ? `${t.fase2_az.ad_zonal || p.ad_zonal || 'Administración Zonal'}${diasTexto}${t.fase2_az.profesional ? '<br>Profesional: ' + t.fase2_az.profesional : ''}`
+      : 'Administración Zonal: No registrada';
 
-        // Fase 3: Agencia Metropolitana de Control (AMC)
-        const isF3Active = !!(t.fase3_amc && t.fase3_amc.tiene);
-        const f3Cert = isF3Active
-          ? `Certificado: ${t.fase3_amc.certificado || t.fase3_amc.registro || 'CCF Registrado'}`
-          : 'Pendiente de emisión en AMC';
-        const f3Resultado = isF3Active
-          ? `Resultado: <strong style="color:${t.fase3_amc.resultado === 'FAVORABLE' ? '#34d399' : '#f59e0b'};">${t.fase3_amc.resultado || 'FAVORABLE'}</strong>${t.fase3_amc.area_declarada ? ` &bull; Área: ${formatArea(t.fase3_amc.area_declarada)}` : ''}`
-          : 'Resultado: No registrado / En obra';
+    // Fase 3: Agencia Metropolitana de Control (AMC)
+    const isF3Active = !!(t.fase3_amc && t.fase3_amc.tiene);
+    const f3Cert = isF3Active
+      ? `Certificado: ${t.fase3_amc.certificado || t.fase3_amc.registro || 'CCF Registrado'}`
+      : 'Pendiente de emisión en AMC';
+    const f3Resultado = isF3Active
+      ? `Resultado: <strong style="color:${t.fase3_amc.resultado === 'FAVORABLE' ? '#34d399' : '#f59e0b'};">${t.fase3_amc.resultado || 'FAVORABLE'}</strong>${t.fase3_amc.area_declarada ? ` &bull; Área: ${formatArea(t.fase3_amc.area_declarada)}` : ''}`
+      : 'Resultado: No registrado / En obra';
 
-        return `
+    return `
           <div class="dmc-tab-pane ${isFirst ? 'active' : ''}" id="dmc-pane-trace-${idx}">
             <!-- Encabezado de la Licencia / Trámite -->
             <div style="background:rgba(15,23,42,0.65); border:1px solid rgba(255,255,255,0.08); border-radius:8px; padding:12px 14px; margin-bottom:14px;">
@@ -923,7 +924,7 @@ window.openPredioModal = function (predioNum) {
             </div>
           </div>
         `;
-      }).join('')}
+  }).join('')}
 
       <!-- Pestaña de Propiedad Horizontal (si aplica) -->
       ${p.tiene_ph ? `
@@ -1981,3 +1982,853 @@ function setupEventListeners() {
     });
   });
 }
+
+/**
+ * ============================================================================
+ * INDICADORES EJECUTIVOS (Monitoreo de Normativa Metropolitana - Licenciamiento)
+ * Pestaña de Indicadores (Opción A: Vista Full Dashboard)
+ * ============================================================================
+ */
+
+function getCleanZonalName(raw) {
+  if (!raw) return 'Otras';
+  const s = raw.toUpperCase();
+  if (s.includes('TUMBACO')) return 'Tumbaco';
+  if (s.includes('ESPEJO') || s.includes('NORTE')) return 'Eugenio Espejo';
+  if (s.includes('CHILLOS')) return 'Los Chillos';
+  if (s.includes('DELICIA')) return 'La Delicia';
+  if (s.includes('CALDER')) return 'Calderón';
+  if (s.includes('QUITUMBE')) return 'Quitumbe';
+  if (s.includes('ALFARO') || s.includes('SUR')) return 'Eloy Alfaro';
+  if (s.includes('CENTRO') || s.includes('MANUELA')) return 'Manuela Sáenz';
+  if (s.includes('MARISCAL')) return 'La Mariscal';
+  if (s.includes('CHOCO') || s.includes('NAN')) return 'Chocó Andino';
+  return 'Otras';
+}
+
+/**
+ * Alternar entre vista Visor Territorial y Tablero de Indicadores
+ */
+window.switchMainView = function (viewName) {
+  const mapBtn = document.getElementById('view-tab-map-btn');
+  const indBtn = document.getElementById('view-tab-indicators-btn');
+  const mainWorkspace = document.getElementById('main-workspace');
+  const indWorkspace = document.getElementById('indicators-workspace');
+  const kpiBanner = document.getElementById('kpi-banner');
+
+  if (viewName === 'indicators') {
+    if (mapBtn) mapBtn.classList.remove('active');
+    if (indBtn) indBtn.classList.add('active');
+    if (mainWorkspace) mainWorkspace.classList.add('hidden');
+    if (kpiBanner) kpiBanner.classList.add('hidden');
+    if (indWorkspace) indWorkspace.classList.remove('hidden');
+
+    renderIndicatorsDashboard();
+  } else {
+    if (indBtn) indBtn.classList.remove('active');
+    if (mapBtn) mapBtn.classList.add('active');
+    if (indWorkspace) indWorkspace.classList.add('hidden');
+    if (mainWorkspace) mainWorkspace.classList.remove('hidden');
+    if (kpiBanner) kpiBanner.classList.remove('hidden');
+
+    if (state.map) {
+      setTimeout(() => state.map.resize(), 150);
+    }
+  }
+
+  if (window.lucide) lucide.createIcons();
+};
+
+/**
+ * Navegación suave entre secciones de indicadores
+ */
+window.scrollToIndicator = function (secId) {
+  const el = document.getElementById(secId);
+  if (!el) return;
+  const container = document.getElementById('indicators-workspace');
+  if (container) {
+    const elTop = el.offsetTop - 70;
+    container.scrollTo({ top: elTop, behavior: 'smooth' });
+  } else {
+    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  document.querySelectorAll('.ind-nav-btn').forEach(btn => {
+    const fn = btn.getAttribute('onclick') || '';
+    btn.classList.toggle('active', fn.includes(secId));
+  });
+};
+
+/**
+ * Renderizado de gráficos y tablas de los 5 Indicadores Oficiales
+ */
+function renderIndicatorsDashboard() {
+  if (!state.allProjects || state.allProjects.length === 0) return;
+  const allProjects = state.allProjects;
+  state.indCharts = state.indCharts || {};
+
+  const tooltipStyle = {
+    backgroundColor: 'rgba(15, 23, 42, 0.95)',
+    titleColor: '#f8fafc',
+    bodyColor: '#cbd5e1',
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+    borderWidth: 1,
+    padding: 10,
+    boxPadding: 4,
+    usePointStyle: true
+  };
+
+  // =========================================================================
+  // INDICADOR 1: Porcentaje de proyectos que culminan las 3 fases
+  // =========================================================================
+  const initiatedF1 = allProjects.filter(p => p.in_ec);
+  const completedF3 = allProjects.filter(p => p.in_ec && p.in_az && p.in_amc);
+  const totalInit = initiatedF1.length;
+  const totalComp = completedF3.length;
+  const globalRate = totalInit > 0 ? (totalComp * 100 / totalInit).toFixed(2) : '0.00';
+
+  const elInd1Main = document.getElementById('ind1-kpi-main');
+  if (elInd1Main) elInd1Main.textContent = `${globalRate}%`;
+
+  // 1.1 Por Entidad Colaboradora
+  const entData = {
+    'CAE-P': { init: 0, comp: 0 },
+    'Desintecsa': { init: 0, comp: 0 }
+  };
+  initiatedF1.forEach(p => {
+    const ent = (p.entidad_colaboradora && p.entidad_colaboradora.includes('Desintecsa')) ? 'Desintecsa' : 'CAE-P';
+    entData[ent].init++;
+    if (p.in_az && p.in_amc) entData[ent].comp++;
+  });
+
+  const ctxInd1Ent = document.getElementById('chart-ind1-entidad')?.getContext('2d');
+  if (ctxInd1Ent) {
+    if (state.indCharts.ind1Ent) state.indCharts.ind1Ent.destroy();
+    state.indCharts.ind1Ent = new Chart(ctxInd1Ent, {
+      type: 'bar',
+      data: {
+        labels: ['CAE-P', 'Desintecsa'],
+        datasets: [
+          {
+            label: 'Proyectos Iniciados',
+            data: [entData['CAE-P'].init, entData['Desintecsa'].init],
+            backgroundColor: '#0284c7',
+            borderRadius: 6
+          },
+          {
+            label: 'Culminaron 3 Fases',
+            data: [entData['CAE-P'].comp, entData['Desintecsa'].comp],
+            backgroundColor: '#a855f7',
+            borderRadius: 6
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'top', labels: { boxWidth: 12, color: '#94a3b8' } },
+          tooltip: tooltipStyle
+        },
+        scales: {
+          x: { grid: { display: false } },
+          y: { grid: { color: 'rgba(255, 255, 255, 0.05)' } }
+        }
+      }
+    });
+  }
+
+  // Tabla 1.1
+  const tbodyInd1Ent = document.querySelector('#table-ind1-entidad tbody');
+  if (tbodyInd1Ent) {
+    const caepRate = (entData['CAE-P'].comp * 100 / entData['CAE-P'].init).toFixed(2);
+    const desRate = (entData['Desintecsa'].comp * 100 / entData['Desintecsa'].init).toFixed(2);
+    tbodyInd1Ent.innerHTML = `
+      <tr>
+        <td><strong>CAE-P</strong></td>
+        <td>${entData['CAE-P'].init.toLocaleString('es-EC')}</td>
+        <td><strong style="color:#c084fc;">${entData['CAE-P'].comp}</strong></td>
+        <td><span class="ind-tag-pill purple">${caepRate}%</span></td>
+      </tr>
+      <tr>
+        <td><strong>Desintecsa</strong></td>
+        <td>${entData['Desintecsa'].init.toLocaleString('es-EC')}</td>
+        <td><strong style="color:#c084fc;">${entData['Desintecsa'].comp}</strong></td>
+        <td><span class="ind-tag-pill purple">${desRate}%</span></td>
+      </tr>
+      <tr style="border-top:1px solid rgba(255,255,255,0.1); background:rgba(255,255,255,0.02);">
+        <td><strong>Total DMQ</strong></td>
+        <td>${totalInit.toLocaleString('es-EC')}</td>
+        <td><strong style="color:#c084fc;">${totalComp}</strong></td>
+        <td><span class="ind-tag-pill purple" style="font-weight:700;">${globalRate}%</span></td>
+      </tr>
+    `;
+  }
+
+  // 1.2 Por Administración Zonal
+  const zonalesList = [
+    'La Delicia', 'Tumbaco', 'Eugenio Espejo', 'La Mariscal',
+    'Calderón', 'Los Chillos', 'Eloy Alfaro', 'Quitumbe', 'Manuela Sáenz'
+  ];
+  const zonalData = {};
+  zonalesList.forEach(z => { zonalData[z] = { init: 0, comp: 0 }; });
+
+  initiatedF1.forEach(p => {
+    const z = getCleanZonalName(p.ad_zonal);
+    if (!zonalData[z]) zonalData[z] = { init: 0, comp: 0 };
+    zonalData[z].init++;
+    if (p.in_az && p.in_amc) zonalData[z].comp++;
+  });
+
+  const sortedZonales = Object.keys(zonalData).sort((a, b) => {
+    const rA = zonalData[a].init > 0 ? (zonalData[a].comp / zonalData[a].init) : 0;
+    const rB = zonalData[b].init > 0 ? (zonalData[b].comp / zonalData[b].init) : 0;
+    return rB - rA;
+  });
+
+  const ctxInd1Zonal = document.getElementById('chart-ind1-zonal')?.getContext('2d');
+  if (ctxInd1Zonal) {
+    if (state.indCharts.ind1Zonal) state.indCharts.ind1Zonal.destroy();
+    state.indCharts.ind1Zonal = new Chart(ctxInd1Zonal, {
+      type: 'bar',
+      data: {
+        labels: sortedZonales,
+        datasets: [{
+          label: 'Tasa de Culminación (%)',
+          data: sortedZonales.map(z => {
+            const tot = zonalData[z].init;
+            return tot > 0 ? parseFloat((zonalData[z].comp * 100 / tot).toFixed(2)) : 0;
+          }),
+          backgroundColor: '#c084fc',
+          borderRadius: 4
+        }]
+      },
+      options: {
+        indexAxis: 'y',
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            ...tooltipStyle,
+            callbacks: {
+              label: (ctx) => {
+                const z = sortedZonales[ctx.dataIndex];
+                const info = zonalData[z];
+                return ` ${ctx.parsed.x}% (${info.comp} de ${info.init.toLocaleString('es-EC')} proyectos)`;
+              }
+            }
+          }
+        },
+        scales: {
+          x: {
+            ticks: { callback: v => `${v}%` },
+            grid: { color: 'rgba(255, 255, 255, 0.05)' }
+          },
+          y: { grid: { display: false } }
+        }
+      }
+    });
+  }
+
+  // Tabla 1.2
+  const tbodyInd1Zonal = document.querySelector('#table-ind1-zonal tbody');
+  if (tbodyInd1Zonal) {
+    tbodyInd1Zonal.innerHTML = sortedZonales.map(z => {
+      const d = zonalData[z];
+      const rate = d.init > 0 ? (d.comp * 100 / d.init).toFixed(2) : '0.00';
+      return `
+        <tr>
+          <td>${z}</td>
+          <td>${d.init.toLocaleString('es-EC')}</td>
+          <td><strong style="color:#c084fc;">${d.comp}</strong></td>
+          <td><span class="ind-tag-pill purple">${rate}%</span></td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  // 1.3 Por Año
+  const years1 = ['2023', '2024', '2025', '2026'];
+  const anioData = {};
+  years1.forEach(y => { anioData[y] = { init: 0, comp: 0 }; });
+
+  initiatedF1.forEach(p => {
+    const y = String(p.year);
+    if (anioData[y]) {
+      anioData[y].init++;
+      if (p.in_az && p.in_amc) anioData[y].comp++;
+    }
+  });
+
+  const ctxInd1Anio = document.getElementById('chart-ind1-anio')?.getContext('2d');
+  if (ctxInd1Anio) {
+    if (state.indCharts.ind1Anio) state.indCharts.ind1Anio.destroy();
+    state.indCharts.ind1Anio = new Chart(ctxInd1Anio, {
+      type: 'bar',
+      data: {
+        labels: years1,
+        datasets: [
+          {
+            type: 'bar',
+            label: 'Iniciados',
+            data: years1.map(y => anioData[y].init),
+            backgroundColor: '#38bdf8',
+            borderRadius: 4,
+            yAxisID: 'y'
+          },
+          {
+            type: 'bar',
+            label: '3 Fases',
+            data: years1.map(y => anioData[y].comp),
+            backgroundColor: '#a855f7',
+            borderRadius: 4,
+            yAxisID: 'y'
+          },
+          {
+            type: 'line',
+            label: 'Tasa (%)',
+            data: years1.map(y => anioData[y].init > 0 ? parseFloat((anioData[y].comp * 100 / anioData[y].init).toFixed(2)) : 0),
+            borderColor: '#e879f9',
+            backgroundColor: '#e879f9',
+            borderWidth: 2,
+            pointRadius: 4,
+            tension: 0.3,
+            yAxisID: 'y1'
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'top', labels: { boxWidth: 12, color: '#94a3b8' } },
+          tooltip: tooltipStyle
+        },
+        scales: {
+          x: { grid: { display: false } },
+          y: {
+            position: 'left',
+            grid: { color: 'rgba(255, 255, 255, 0.05)' },
+            title: { display: true, text: 'Proyectos', color: '#64748b' }
+          },
+          y1: {
+            position: 'right',
+            grid: { display: false },
+            ticks: { callback: v => `${v}%` },
+            title: { display: true, text: 'Tasa (%)', color: '#e879f9' }
+          }
+        }
+      }
+    });
+  }
+
+  // Tabla 1.3
+  const tbodyInd1Anio = document.querySelector('#table-ind1-anio tbody');
+  if (tbodyInd1Anio) {
+    tbodyInd1Anio.innerHTML = years1.map(y => {
+      const d = anioData[y];
+      const rate = d.init > 0 ? (d.comp * 100 / d.init).toFixed(2) : '0.00';
+      return `
+        <tr>
+          <td><strong>${y}</strong></td>
+          <td>${d.init.toLocaleString('es-EC')}</td>
+          <td><strong style="color:#c084fc;">${d.comp}</strong></td>
+          <td><span class="ind-tag-pill purple">${rate}%</span></td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  // =========================================================================
+  // INDICADOR 2: Cantidad de certificados de conformidad emitidos por año (EC)
+  // =========================================================================
+  const allEcCerts = [];
+  allProjects.forEach(p => {
+    if (Array.isArray(p.certificados_ec) && p.certificados_ec.length > 0) {
+      p.certificados_ec.forEach(c => allEcCerts.push({ ...c, predio: p.predio }));
+    } else if (p.in_ec && p.fase1_ec && p.fase1_ec.tiene) {
+      allEcCerts.push({ ...p.fase1_ec, predio: p.predio });
+    }
+  });
+
+  const elInd2Main = document.getElementById('ind2-kpi-main');
+  if (elInd2Main) elInd2Main.textContent = allEcCerts.length.toLocaleString('es-EC');
+
+  // 2.1 Trimestres
+  const ecQuarterMap = {};
+  allEcCerts.forEach(c => {
+    const f = c.fecha_emision;
+    if (f && f.length >= 7) {
+      const y = f.substring(0, 4);
+      const m = parseInt(f.substring(5, 7));
+      const q = `Q${Math.ceil(m / 3)}`;
+      const key = `${y}-${q}`;
+      ecQuarterMap[key] = (ecQuarterMap[key] || 0) + 1;
+    }
+  });
+
+  const ecQuarterKeys = Object.keys(ecQuarterMap).sort();
+
+  const ctxInd2Trim = document.getElementById('chart-ind2-trimestres')?.getContext('2d');
+  if (ctxInd2Trim) {
+    if (state.indCharts.ind2Trim) state.indCharts.ind2Trim.destroy();
+    state.indCharts.ind2Trim = new Chart(ctxInd2Trim, {
+      type: 'line',
+      data: {
+        labels: ecQuarterKeys,
+        datasets: [{
+          label: 'Certificados Emitidos',
+          data: ecQuarterKeys.map(k => ecQuarterMap[k]),
+          borderColor: '#06b6d4',
+          backgroundColor: 'rgba(6, 182, 212, 0.12)',
+          fill: true,
+          tension: 0.35,
+          pointBackgroundColor: '#06b6d4',
+          pointRadius: 4,
+          pointHoverRadius: 6,
+          borderWidth: 2
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: tooltipStyle
+        },
+        scales: {
+          x: { grid: { display: false } },
+          y: { grid: { color: 'rgba(255, 255, 255, 0.05)' } }
+        }
+      }
+    });
+  }
+
+  // 2.2 Desagregación por Entidad Colaboradora por Año
+  const years2 = ['2023', '2024', '2025', '2026'];
+  const entYearData = {
+    'CAE-P': { '2023': 0, '2024': 0, '2025': 0, '2026': 0 },
+    'Desintecsa': { '2023': 0, '2024': 0, '2025': 0, '2026': 0 }
+  };
+
+  allEcCerts.forEach(c => {
+    let y = c.fecha_emision ? c.fecha_emision.substring(0, 4) : '';
+    if (!years2.includes(y)) y = '2024';
+    const ent = (c.entidad && c.entidad.includes('Desintecsa')) ? 'Desintecsa' : 'CAE-P';
+    if (entYearData[ent] && entYearData[ent][y] !== undefined) {
+      entYearData[ent][y]++;
+    }
+  });
+
+  const ctxInd2Ent = document.getElementById('chart-ind2-entidad')?.getContext('2d');
+  if (ctxInd2Ent) {
+    if (state.indCharts.ind2Ent) state.indCharts.ind2Ent.destroy();
+    state.indCharts.ind2Ent = new Chart(ctxInd2Ent, {
+      type: 'bar',
+      data: {
+        labels: years2,
+        datasets: [
+          {
+            label: 'CAE-P',
+            data: years2.map(y => entYearData['CAE-P'][y]),
+            backgroundColor: '#0284c7',
+            borderRadius: 4
+          },
+          {
+            label: 'Desintecsa',
+            data: years2.map(y => entYearData['Desintecsa'][y]),
+            backgroundColor: '#06b6d4',
+            borderRadius: 4
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'top', labels: { boxWidth: 12, color: '#94a3b8' } },
+          tooltip: tooltipStyle
+        },
+        scales: {
+          x: { stacked: true, grid: { display: false } },
+          y: { stacked: true, grid: { color: 'rgba(255, 255, 255, 0.05)' } }
+        }
+      }
+    });
+  }
+
+  // Tabla 2.2
+  const tbodyInd2Ent = document.querySelector('#table-ind2-entidad tbody');
+  if (tbodyInd2Ent) {
+    const caepTotal = years2.reduce((acc, y) => acc + entYearData['CAE-P'][y], 0);
+    const desTotal = years2.reduce((acc, y) => acc + entYearData['Desintecsa'][y], 0);
+    const totalAll = caepTotal + desTotal;
+    const caepShare = totalAll > 0 ? (caepTotal * 100 / totalAll).toFixed(1) : '0';
+    const desShare = totalAll > 0 ? (desTotal * 100 / totalAll).toFixed(1) : '0';
+
+    tbodyInd2Ent.innerHTML = `
+      <tr>
+        <td><strong>CAE-P</strong></td>
+        ${years2.map(y => `<td>${entYearData['CAE-P'][y].toLocaleString('es-EC')}</td>`).join('')}
+        <td><strong>${caepTotal.toLocaleString('es-EC')} <small style="color:#38bdf8;">(${caepShare}%)</small></strong></td>
+      </tr>
+      <tr>
+        <td><strong>Desintecsa</strong></td>
+        ${years2.map(y => `<td>${entYearData['Desintecsa'][y].toLocaleString('es-EC')}</td>`).join('')}
+        <td><strong>${desTotal.toLocaleString('es-EC')} <small style="color:#06b6d4;">(${desShare}%)</small></strong></td>
+      </tr>
+      <tr style="border-top:1px solid rgba(255,255,255,0.1); background:rgba(255,255,255,0.02);">
+        <td><strong>Total DMQ</strong></td>
+        ${years2.map(y => `<td><strong>${(entYearData['CAE-P'][y] + entYearData['Desintecsa'][y]).toLocaleString('es-EC')}</strong></td>`).join('')}
+        <td><strong style="color:#38bdf8;">${totalAll.toLocaleString('es-EC')} (100%)</strong></td>
+      </tr>
+    `;
+  }
+
+  // =========================================================================
+  // INDICADOR 3: Cantidad de Licencias Metropolitanas Urbanísticas emitidas por año
+  // =========================================================================
+  const allAzLics = [];
+  allProjects.forEach(p => {
+    if (Array.isArray(p.licencias_az) && p.licencias_az.length > 0) {
+      p.licencias_az.forEach(l => allAzLics.push({ ...l, predio: p.predio, tipo_licencia: p.tipo_licencia || 'LMU 20' }));
+    } else if (p.in_az && p.fase2_az && p.fase2_az.tiene) {
+      allAzLics.push({ ...p.fase2_az, predio: p.predio, tipo_licencia: p.tipo_licencia || 'LMU 20' });
+    }
+  });
+
+  const elInd3Main = document.getElementById('ind3-kpi-main');
+  if (elInd3Main) elInd3Main.textContent = allAzLics.length.toLocaleString('es-EC');
+
+  // 3.1 Trimestres
+  const azQuarterMap = {};
+  allAzLics.forEach(l => {
+    const f = l.fecha_emision;
+    if (f && f.length >= 7) {
+      const y = f.substring(0, 4);
+      const m = parseInt(f.substring(5, 7));
+      const q = `Q${Math.ceil(m / 3)}`;
+      const key = `${y}-${q}`;
+      azQuarterMap[key] = (azQuarterMap[key] || 0) + 1;
+    }
+  });
+  const azQuarterKeys = Object.keys(azQuarterMap).sort();
+
+  const ctxInd3Trim = document.getElementById('chart-ind3-trimestres')?.getContext('2d');
+  if (ctxInd3Trim) {
+    if (state.indCharts.ind3Trim) state.indCharts.ind3Trim.destroy();
+    state.indCharts.ind3Trim = new Chart(ctxInd3Trim, {
+      type: 'bar',
+      data: {
+        labels: azQuarterKeys,
+        datasets: [{
+          label: 'Licencias Emitidas',
+          data: azQuarterKeys.map(k => azQuarterMap[k]),
+          backgroundColor: '#f59e0b',
+          borderRadius: 4
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: tooltipStyle
+        },
+        scales: {
+          x: { grid: { display: false } },
+          y: { grid: { color: 'rgba(255, 255, 255, 0.05)' } }
+        }
+      }
+    });
+  }
+
+  // 3.2 Por Administración Zonal y Tipo de Licencia
+  const zonalesAzMap = {};
+  allAzLics.forEach(l => {
+    const z = getCleanZonalName(l.ad_zonal);
+    if (!zonalesAzMap[z]) zonalesAzMap[z] = { lmu20: 0, lmu10: 0, total: 0 };
+    if (l.tipo_licencia === 'LMU 10') {
+      zonalesAzMap[z].lmu10++;
+    } else {
+      zonalesAzMap[z].lmu20++;
+    }
+    zonalesAzMap[z].total++;
+  });
+
+  const sortedAzZonales = Object.keys(zonalesAzMap).sort((a, b) => zonalesAzMap[b].total - zonalesAzMap[a].total);
+
+  const ctxInd3Zonal = document.getElementById('chart-ind3-zonal')?.getContext('2d');
+  if (ctxInd3Zonal) {
+    if (state.indCharts.ind3Zonal) state.indCharts.ind3Zonal.destroy();
+    state.indCharts.ind3Zonal = new Chart(ctxInd3Zonal, {
+      type: 'bar',
+      data: {
+        labels: sortedAzZonales,
+        datasets: [
+          {
+            label: 'LMU 20 (Edificaciones)',
+            data: sortedAzZonales.map(z => zonalesAzMap[z].lmu20),
+            backgroundColor: '#f59e0b',
+            borderRadius: 4
+          },
+          {
+            label: 'LMU 10 (Suelo / Lotes)',
+            data: sortedAzZonales.map(z => zonalesAzMap[z].lmu10),
+            backgroundColor: '#fbbf24',
+            borderRadius: 4
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'top', labels: { boxWidth: 12, color: '#94a3b8' } },
+          tooltip: tooltipStyle
+        },
+        scales: {
+          x: { stacked: true, grid: { display: false } },
+          y: { stacked: true, grid: { color: 'rgba(255, 255, 255, 0.05)' } }
+        }
+      }
+    });
+  }
+
+  // =========================================================================
+  // INDICADOR 4: Cantidad de certificados de finalización emitidos por año (AMC)
+  // =========================================================================
+  const allAmcCerts = [];
+  allProjects.forEach(p => {
+    if (Array.isArray(p.certificados_amc) && p.certificados_amc.length > 0) {
+      p.certificados_amc.forEach(a => allAmcCerts.push({ ...a, predio: p.predio, ad_zonal: p.ad_zonal }));
+    } else if (p.in_amc && p.fase3_amc && p.fase3_amc.tiene) {
+      allAmcCerts.push({ ...p.fase3_amc, predio: p.predio, ad_zonal: p.ad_zonal });
+    }
+  });
+
+  const elInd4Main = document.getElementById('ind4-kpi-main');
+  if (elInd4Main) elInd4Main.textContent = allAmcCerts.length.toLocaleString('es-EC');
+
+  // 4.1 Trimestres AMC
+  const amcQuarterMap = {};
+  allAmcCerts.forEach(a => {
+    const reg = a.registro || '';
+    let y = '2024';
+    const mYear = reg.match(/CCF-(\d{2})-/);
+    if (mYear) {
+      y = `20${mYear[1]}`;
+    }
+    let num = 0;
+    const mNum = reg.match(/CCF-\d{2}-(\d+)/);
+    if (mNum) num = parseInt(mNum[1]);
+    const q = num <= 35 ? 'Q1' : (num <= 70 ? 'Q2' : (num <= 115 ? 'Q3' : 'Q4'));
+    const key = `${y}-${q}`;
+    amcQuarterMap[key] = (amcQuarterMap[key] || 0) + 1;
+  });
+
+  const amcQuarterKeys = Object.keys(amcQuarterMap).sort();
+
+  const ctxInd4Trim = document.getElementById('chart-ind4-trimestres')?.getContext('2d');
+  if (ctxInd4Trim) {
+    if (state.indCharts.ind4Trim) state.indCharts.ind4Trim.destroy();
+    state.indCharts.ind4Trim = new Chart(ctxInd4Trim, {
+      type: 'bar',
+      data: {
+        labels: amcQuarterKeys,
+        datasets: [{
+          label: 'Certificados AMC (CCF)',
+          data: amcQuarterKeys.map(k => amcQuarterMap[k]),
+          backgroundColor: '#10b981',
+          borderRadius: 4
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: tooltipStyle
+        },
+        scales: {
+          x: { grid: { display: false } },
+          y: { grid: { color: 'rgba(255, 255, 255, 0.05)' } }
+        }
+      }
+    });
+  }
+
+  // 4.2 Por Administración Zonal AMC
+  const amcZonalesMap = {};
+  allAmcCerts.forEach(a => {
+    let z = getCleanZonalName(a.zona);
+    if (z === 'Otras' && a.ad_zonal) z = getCleanZonalName(a.ad_zonal);
+    amcZonalesMap[z] = (amcZonalesMap[z] || 0) + 1;
+  });
+
+  const sortedAmcZonales = Object.keys(amcZonalesMap).sort((a, b) => amcZonalesMap[b] - amcZonalesMap[a]);
+
+  const ctxInd4Zonal = document.getElementById('chart-ind4-zonal')?.getContext('2d');
+  if (ctxInd4Zonal) {
+    if (state.indCharts.ind4Zonal) state.indCharts.ind4Zonal.destroy();
+    state.indCharts.ind4Zonal = new Chart(ctxInd4Zonal, {
+      type: 'bar',
+      data: {
+        labels: sortedAmcZonales,
+        datasets: [{
+          label: 'Certificados de Finalización (CCF)',
+          data: sortedAmcZonales.map(z => amcZonalesMap[z]),
+          backgroundColor: '#059669',
+          borderRadius: 4
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: tooltipStyle
+        },
+        scales: {
+          x: { grid: { display: false } },
+          y: { grid: { color: 'rgba(255, 255, 255, 0.05)' } }
+        }
+      }
+    });
+  }
+
+  // =========================================================================
+  // INDICADOR 5: Porcentaje de participación de cada Zonal respecto del total por año
+  // =========================================================================
+  const years5 = ['2023', '2024', '2025', '2026'];
+  const zonalesClean5 = ['Tumbaco', 'Eugenio Espejo', 'Los Chillos', 'La Delicia', 'Calderón', 'Quitumbe', 'Eloy Alfaro', 'Manuela Sáenz', 'La Mariscal', 'Chocó Andino'];
+
+  const zonalYearCounts = {};
+  const yearTotals = { '2023': 0, '2024': 0, '2025': 0, '2026': 0 };
+
+  years5.forEach(y => {
+    zonalesClean5.forEach(z => {
+      zonalYearCounts[`${z}-${y}`] = 0;
+    });
+  });
+
+  allAzLics.forEach(l => {
+    let y = l.fecha_emision ? l.fecha_emision.substring(0, 4) : '';
+    if (!years5.includes(y)) y = '2024';
+    const z = getCleanZonalName(l.ad_zonal);
+    const key = `${z}-${y}`;
+    if (zonalYearCounts[key] !== undefined) {
+      zonalYearCounts[key]++;
+      yearTotals[y]++;
+    }
+  });
+
+  const zonalPalette = {
+    'Tumbaco': '#38bdf8',
+    'Eugenio Espejo': '#818cf8',
+    'Los Chillos': '#f59e0b',
+    'La Delicia': '#10b981',
+    'Calderón': '#ec4899',
+    'Quitumbe': '#a855f7',
+    'Eloy Alfaro': '#f97316',
+    'Manuela Sáenz': '#64748b',
+    'La Mariscal': '#06b6d4',
+    'Chocó Andino': '#84cc16',
+    'Otras': '#475569'
+  };
+
+  const ind5Datasets = zonalesClean5.map(z => {
+    return {
+      label: z,
+      data: years5.map(y => {
+        const tot = yearTotals[y];
+        const cnt = zonalYearCounts[`${z}-${y}`] || 0;
+        return tot > 0 ? parseFloat((cnt * 100 / tot).toFixed(1)) : 0;
+      }),
+      backgroundColor: zonalPalette[z] || '#94a3b8',
+      borderRadius: 2
+    };
+  });
+
+  const ctxInd5Part = document.getElementById('chart-ind5-participacion')?.getContext('2d');
+  if (ctxInd5Part) {
+    if (state.indCharts.ind5Part) state.indCharts.ind5Part.destroy();
+    state.indCharts.ind5Part = new Chart(ctxInd5Part, {
+      type: 'bar',
+      data: {
+        labels: years5,
+        datasets: ind5Datasets
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'right', labels: { boxWidth: 10, color: '#94a3b8', font: { size: 11 } } },
+          tooltip: {
+            ...tooltipStyle,
+            callbacks: {
+              label: (ctx) => {
+                const z = ctx.dataset.label;
+                const y = years5[ctx.dataIndex];
+                const cnt = zonalYearCounts[`${z}-${y}`] || 0;
+                return ` ${z}: ${ctx.parsed.y}% (${cnt.toLocaleString('es-EC')} licencias)`;
+              }
+            }
+          }
+        },
+        scales: {
+          x: { stacked: true, grid: { display: false } },
+          y: {
+            stacked: true,
+            max: 100,
+            ticks: { callback: v => `${v}%` },
+            grid: { color: 'rgba(255, 255, 255, 0.05)' }
+          }
+        }
+      }
+    });
+  }
+
+  // Tabla 5.2 Matriz de Cuota Territorial
+  const tbodyInd5Part = document.querySelector('#table-ind5-participacion tbody');
+  if (tbodyInd5Part) {
+    const zonalTotalsAllYears = {};
+    let grandTotalLics = 0;
+    zonalesClean5.forEach(z => {
+      let sum = 0;
+      years5.forEach(y => { sum += (zonalYearCounts[`${z}-${y}`] || 0); });
+      zonalTotalsAllYears[z] = sum;
+      grandTotalLics += sum;
+    });
+
+    const sortedZonales5 = [...zonalesClean5].sort((a, b) => zonalTotalsAllYears[b] - zonalTotalsAllYears[a]);
+
+    tbodyInd5Part.innerHTML = sortedZonales5.map(z => {
+      const totalZ = zonalTotalsAllYears[z];
+      const zColor = zonalPalette[z] || '#cbd5e1';
+      return `
+        <tr>
+          <td>
+            <span style="display:inline-block; width:9px; height:9px; border-radius:50%; background:${zColor}; margin-right:6px;"></span>
+            <strong>${z}</strong>
+          </td>
+          ${years5.map(y => {
+            const tot = yearTotals[y];
+            const cnt = zonalYearCounts[`${z}-${y}`] || 0;
+            const pct = tot > 0 ? (cnt * 100 / tot).toFixed(1) : '0.0';
+            return `<td>${pct}% <small style="color:#64748b;">(${cnt})</small></td>`;
+          }).join('')}
+          <td><strong style="color:${zColor};">${totalZ.toLocaleString('es-EC')}</strong></td>
+        </tr>
+      `;
+    }).join('') + `
+      <tr style="border-top:1px solid rgba(255,255,255,0.15); background:rgba(255,255,255,0.03); font-weight:700;">
+        <td><strong>Total DMQ</strong></td>
+        ${years5.map(y => `<td>100% <small style="color:#64748b;">(${yearTotals[y].toLocaleString('es-EC')})</small></td>`).join('')}
+        <td><strong style="color:#38bdf8;">${grandTotalLics.toLocaleString('es-EC')}</strong></td>
+      </tr>
+    `;
+  }
+}
+
