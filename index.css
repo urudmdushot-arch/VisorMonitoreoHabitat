@@ -1222,6 +1222,22 @@ body {
   background: rgba(15, 23, 42, 0.6);
   padding: 8px 10px;
   border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+.f-stat.f-stat-full {
+  grid-column: 1 / -1;
+  background: rgba(139, 92, 246, 0.08);
+  border: 1px solid rgba(139, 92, 246, 0.25);
+}
+.f-stat-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.f-sub {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  margin-top: 2px;
 }
 .f-lbl {
   font-size: 0.68rem;
@@ -1234,6 +1250,7 @@ body {
 }
 .f-val.green { color: #34d399; }
 .f-val.amber { color: #fbbf24; }
+.f-val.purple { color: #c084fc; }
 
 /* ==========================================================================
    MAPBOX POPUP STYLING

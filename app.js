@@ -1162,6 +1162,7 @@ function updateKpiCards() {
   const pctF1 = total > 0 ? ((f1Stayed * 100) / total).toFixed(1) : 0;
   const pctF2 = total > 0 ? ((f2Stayed * 100) / total).toFixed(1) : 0;
   const pctF3 = total > 0 ? ((f3Stayed * 100) / total).toFixed(1) : 0;
+  const pctFull = f1Total > 0 ? ((fullFunnel * 100) / f1Total).toFixed(2) : '0.00';
 
   // Certificados y Licencias totales emitidas
   const totalAmcCerts = current.reduce((sum, p) => sum + (p.total_certificados_amc || (p.certificados_amc ? p.certificados_amc.length : (p.in_amc ? 1 : 0))), 0);
@@ -1178,7 +1179,7 @@ function updateKpiCards() {
   document.getElementById('kpi-sub-fase2').textContent = `${f2Total.toLocaleString()} predios únicos (${pctF2}% avance a Fase 2)`;
 
   document.getElementById('kpi-val-fase3').innerHTML = `${totalAmcCerts.toLocaleString()} <small style="font-size:0.75rem; font-weight:600; color:#cbd5e1;">certificados</small>`;
-  document.getElementById('kpi-sub-fase3').textContent = `${f3Total.toLocaleString()} predios únicos (${fullFunnel.toLocaleString()} ciclo completo)`;
+  document.getElementById('kpi-sub-fase3').textContent = `${f3Total.toLocaleString()} predios únicos (${fullFunnel.toLocaleString()} ciclo completo \u2022 ${pctFull}%)`;
 
   document.getElementById('kpi-val-tiempo').innerHTML = `${avgDays} <small>días</small>`;
 
@@ -1341,9 +1342,20 @@ function initOrUpdateCharts() {
   const f2ToF3 = data.filter(p => p.in_az && p.in_amc).length;
   const f2Stayed = f2Total - f2ToF3;
   const f3Total = data.filter(p => p.in_amc).length;
+  const fullFunnel = data.filter(p => p.in_ec && p.in_az && p.in_amc).length;
 
-  document.getElementById('stat-tasa-az').textContent = f1Total > 0 ? `${Math.round(f1ToF2 * 100 / f1Total)}%` : '0%';
+  document.getElementById('stat-tasa-az').textContent = f1Total > 0 ? `${(f1ToF2 * 100 / f1Total).toFixed(1)}%` : '0%';
   document.getElementById('stat-tasa-amc').textContent = f2Total > 0 ? `${(f2ToF3 * 100 / f2Total).toFixed(1)}%` : '0%';
+
+  const elTasaEcAmc = document.getElementById('stat-tasa-ec-amc');
+  if (elTasaEcAmc) {
+    const tasaEcAmc = f1Total > 0 ? (fullFunnel * 100 / f1Total).toFixed(2) : '0.00';
+    elTasaEcAmc.textContent = `${tasaEcAmc}%`;
+  }
+  const elSubEcAmc = document.getElementById('stat-sub-ec-amc');
+  if (elSubEcAmc) {
+    elSubEcAmc.textContent = `${fullFunnel.toLocaleString()} de ${f1Total.toLocaleString()} proyectos`;
+  }
 
   const ctxFunnel = document.getElementById('chart-funnel').getContext('2d');
   if (state.charts.funnel) state.charts.funnel.destroy();
