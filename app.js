@@ -54,6 +54,7 @@ const state = {
     tiempos: null
   },
   indCharts: {},
+  activeIndicatorTab: 1,
   filters: {
     licencia: 'LMU 20',
     fase: 'all',
@@ -1986,7 +1987,7 @@ function setupEventListeners() {
 /**
  * ============================================================================
  * INDICADORES EJECUTIVOS (Monitoreo de Normativa Metropolitana - Licenciamiento)
- * Pestaña de Indicadores (Opción A: Vista Full Dashboard)
+ * Pestaña de Indicadores (Visualización Individual: 1 Indicador por Pestaña)
  * ============================================================================
  */
 
@@ -2023,7 +2024,7 @@ window.switchMainView = function (viewName) {
     if (kpiBanner) kpiBanner.classList.add('hidden');
     if (indWorkspace) indWorkspace.classList.remove('hidden');
 
-    renderIndicatorsDashboard();
+    switchIndicatorTab(state.activeIndicatorTab || 1);
   } else {
     if (indBtn) indBtn.classList.remove('active');
     if (mapBtn) mapBtn.classList.add('active');
@@ -2040,29 +2041,62 @@ window.switchMainView = function (viewName) {
 };
 
 /**
- * Navegación suave entre secciones de indicadores
+ * Cambiar entre pestañas de los 5 Indicadores (1 solo indicador visible por pestaña)
  */
-window.scrollToIndicator = function (secId) {
-  const el = document.getElementById(secId);
-  if (!el) return;
-  const container = document.getElementById('indicators-workspace');
-  if (container) {
-    const elTop = el.offsetTop - 70;
-    container.scrollTo({ top: elTop, behavior: 'smooth' });
-  } else {
-    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }
+window.switchIndicatorTab = function (tabNum) {
+  const targetNum = parseInt(tabNum) || 1;
+  state.activeIndicatorTab = targetNum;
 
+  // 1. Actualizar estado visual de los botones de pestañas
+  document.querySelectorAll('.ind-tab-btn').forEach(btn => {
+    const isAct = btn.getAttribute('data-ind') === String(targetNum);
+    btn.classList.toggle('active', isAct);
+  });
   document.querySelectorAll('.ind-nav-btn').forEach(btn => {
     const fn = btn.getAttribute('onclick') || '';
-    btn.classList.toggle('active', fn.includes(secId));
+    btn.classList.toggle('active', fn.includes(String(targetNum)));
   });
+
+  // 2. Ocultar todos los indicadores excepto el seleccionado
+  for (let i = 1; i <= 5; i++) {
+    const sec = document.getElementById(`ind-sec-${i}`);
+    if (sec) {
+      if (i === targetNum) {
+        sec.classList.remove('hidden');
+      } else {
+        sec.classList.add('hidden');
+      }
+    }
+  }
+
+  // 3. Renderizar y redimensionar los gráficos del indicador activo
+  renderSpecificIndicator(targetNum);
+
+  // 4. Resetear scroll vertical al tope
+  const workspace = document.getElementById('indicators-workspace');
+  if (workspace) {
+    workspace.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  if (window.lucide) lucide.createIcons();
 };
 
 /**
- * Renderizado de gráficos y tablas de los 5 Indicadores Oficiales
+ * Compatibilidad con llamados previos
  */
-function renderIndicatorsDashboard() {
+window.scrollToIndicator = function (secId) {
+  const match = String(secId).match(/ind-sec-(\d+)/);
+  if (match) {
+    switchIndicatorTab(parseInt(match[1]));
+  } else {
+    switchIndicatorTab(1);
+  }
+};
+
+/**
+ * Renderizado modular del indicador solicitado
+ */
+function renderSpecificIndicator(tabNum) {
   if (!state.allProjects || state.allProjects.length === 0) return;
   const allProjects = state.allProjects;
   state.indCharts = state.indCharts || {};
@@ -2078,9 +2112,27 @@ function renderIndicatorsDashboard() {
     usePointStyle: true
   };
 
-  // =========================================================================
-  // INDICADOR 1: Porcentaje de proyectos que culminan las 3 fases
-  // =========================================================================
+  if (tabNum === 1) {
+    renderInd1(allProjects, tooltipStyle);
+  } else if (tabNum === 2) {
+    renderInd2(allProjects, tooltipStyle);
+  } else if (tabNum === 3) {
+    renderInd3(allProjects, tooltipStyle);
+  } else if (tabNum === 4) {
+    renderInd4(allProjects, tooltipStyle);
+  } else if (tabNum === 5) {
+    renderInd5(allProjects, tooltipStyle);
+  }
+}
+
+function renderIndicatorsDashboard() {
+  switchIndicatorTab(state.activeIndicatorTab || 1);
+}
+
+// ---------------------------------------------------------------------------
+// RENDERIZADO DETALLADO: INDICADOR 1
+// ---------------------------------------------------------------------------
+function renderInd1(allProjects, tooltipStyle) {
   const initiatedF1 = allProjects.filter(p => p.in_ec);
   const completedF3 = allProjects.filter(p => p.in_ec && p.in_az && p.in_amc);
   const totalInit = initiatedF1.length;
@@ -2339,10 +2391,12 @@ function renderIndicatorsDashboard() {
       `;
     }).join('');
   }
+}
 
-  // =========================================================================
-  // INDICADOR 2: Cantidad de certificados de conformidad emitidos por año (EC)
-  // =========================================================================
+// ---------------------------------------------------------------------------
+// RENDERIZADO DETALLADO: INDICADOR 2
+// ---------------------------------------------------------------------------
+function renderInd2(allProjects, tooltipStyle) {
   const allEcCerts = [];
   allProjects.forEach(p => {
     if (Array.isArray(p.certificados_ec) && p.certificados_ec.length > 0) {
@@ -2485,10 +2539,12 @@ function renderIndicatorsDashboard() {
       </tr>
     `;
   }
+}
 
-  // =========================================================================
-  // INDICADOR 3: Cantidad de Licencias Metropolitanas Urbanísticas emitidas por año
-  // =========================================================================
+// ---------------------------------------------------------------------------
+// RENDERIZADO DETALLADO: INDICADOR 3
+// ---------------------------------------------------------------------------
+function renderInd3(allProjects, tooltipStyle) {
   const allAzLics = [];
   allProjects.forEach(p => {
     if (Array.isArray(p.licencias_az) && p.licencias_az.length > 0) {
@@ -2595,10 +2651,12 @@ function renderIndicatorsDashboard() {
       }
     });
   }
+}
 
-  // =========================================================================
-  // INDICADOR 4: Cantidad de certificados de finalización emitidos por año (AMC)
-  // =========================================================================
+// ---------------------------------------------------------------------------
+// RENDERIZADO DETALLADO: INDICADOR 4
+// ---------------------------------------------------------------------------
+function renderInd4(allProjects, tooltipStyle) {
   const allAmcCerts = [];
   allProjects.forEach(p => {
     if (Array.isArray(p.certificados_amc) && p.certificados_amc.length > 0) {
@@ -2697,10 +2755,21 @@ function renderIndicatorsDashboard() {
       }
     });
   }
+}
 
-  // =========================================================================
-  // INDICADOR 5: Porcentaje de participación de cada Zonal respecto del total por año
-  // =========================================================================
+// ---------------------------------------------------------------------------
+// RENDERIZADO DETALLADO: INDICADOR 5
+// ---------------------------------------------------------------------------
+function renderInd5(allProjects, tooltipStyle) {
+  const allAzLics = [];
+  allProjects.forEach(p => {
+    if (Array.isArray(p.licencias_az) && p.licencias_az.length > 0) {
+      p.licencias_az.forEach(l => allAzLics.push({ ...l, predio: p.predio, tipo_licencia: p.tipo_licencia || 'LMU 20' }));
+    } else if (p.in_az && p.fase2_az && p.fase2_az.tiene) {
+      allAzLics.push({ ...p.fase2_az, predio: p.predio, tipo_licencia: p.tipo_licencia || 'LMU 20' });
+    }
+  });
+
   const years5 = ['2023', '2024', '2025', '2026'];
   const zonalesClean5 = ['Tumbaco', 'Eugenio Espejo', 'Los Chillos', 'La Delicia', 'Calderón', 'Quitumbe', 'Eloy Alfaro', 'Manuela Sáenz', 'La Mariscal', 'Chocó Andino'];
 
@@ -2831,4 +2900,5 @@ function renderIndicatorsDashboard() {
     `;
   }
 }
+
 

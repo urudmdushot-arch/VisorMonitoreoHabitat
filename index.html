@@ -27,7 +27,7 @@
   <script src="https://unpkg.com/lucide@latest"></script>
 
   <!-- Styles -->
-  <link rel="stylesheet" href="index.css?v=20261123_v4">
+  <link rel="stylesheet" href="index.css?v=20261123_v5">
 </head>
 
 <body class="dark-theme">
@@ -562,17 +562,46 @@
       <div class="ind-header-info">
         <span class="ind-tag-pill"><i data-lucide="shield-check"></i> Monitoreo y Evaluación de la Normativa Metropolitana</span>
         <h2>Tablero de Indicadores: Monitoreo de Licencias</h2>
-        <p>Seguimiento cuantitativo del ciclo de licenciamiento urbano (Entidades Colaboradoras &rarr; Administraciones Zonales &rarr; AMC) en el Distrito Metropolitano de Quito</p>
+        <p>Seguimiento cuantitativo del ciclo de licenciamiento urbano en el Distrito Metropolitano de Quito (Entidades Colaboradoras &rarr; Administraciones Zonales &rarr; AMC)</p>
       </div>
-      <div class="ind-header-actions">
-        <!-- Quick Nav to Indicators -->
-        <div class="ind-quick-nav">
-          <button class="ind-nav-btn active" onclick="scrollToIndicator('ind-sec-1')"><i data-lucide="check-circle-2"></i> Ind. 1: 3 Fases (%)</button>
-          <button class="ind-nav-btn" onclick="scrollToIndicator('ind-sec-2')"><i data-lucide="file-check"></i> Ind. 2: Certificados EC</button>
-          <button class="ind-nav-btn" onclick="scrollToIndicator('ind-sec-3')"><i data-lucide="award"></i> Ind. 3: Licencias LMU</button>
-          <button class="ind-nav-btn" onclick="scrollToIndicator('ind-sec-4')"><i data-lucide="building"></i> Ind. 4: Finalización AMC</button>
-          <button class="ind-nav-btn" onclick="scrollToIndicator('ind-sec-5')"><i data-lucide="pie-chart"></i> Ind. 5: Cuota por Zonal (%)</button>
-        </div>
+      
+      <!-- Pestañas individuales para cada indicador (1 indicador por pestaña) -->
+      <div class="ind-tabs-nav" id="ind-tabs-nav">
+        <button class="ind-tab-btn active" data-ind="1" onclick="switchIndicatorTab(1)">
+          <span class="ind-tab-num purple">1</span>
+          <div class="ind-tab-text">
+            <span class="ind-tab-title">Ind. 1: Culminación 3 Fases</span>
+            <span class="ind-tab-sub">Tasa Global 1.79%</span>
+          </div>
+        </button>
+        <button class="ind-tab-btn" data-ind="2" onclick="switchIndicatorTab(2)">
+          <span class="ind-tab-num cyan">2</span>
+          <div class="ind-tab-text">
+            <span class="ind-tab-title">Ind. 2: Certificados EC</span>
+            <span class="ind-tab-sub">4,724 Fase 1</span>
+          </div>
+        </button>
+        <button class="ind-tab-btn" data-ind="3" onclick="switchIndicatorTab(3)">
+          <span class="ind-tab-num amber">3</span>
+          <div class="ind-tab-text">
+            <span class="ind-tab-title">Ind. 3: Licencias LMU</span>
+            <span class="ind-tab-sub">4,739 Fase 2</span>
+          </div>
+        </button>
+        <button class="ind-tab-btn" data-ind="4" onclick="switchIndicatorTab(4)">
+          <span class="ind-tab-num emerald">4</span>
+          <div class="ind-tab-text">
+            <span class="ind-tab-title">Ind. 4: Finalización AMC</span>
+            <span class="ind-tab-sub">452 Fase 3</span>
+          </div>
+        </button>
+        <button class="ind-tab-btn" data-ind="5" onclick="switchIndicatorTab(5)">
+          <span class="ind-tab-num blue">5</span>
+          <div class="ind-tab-text">
+            <span class="ind-tab-title">Ind. 5: Cuota por Zonal</span>
+            <span class="ind-tab-sub">100% Territorial</span>
+          </div>
+        </button>
       </div>
     </div>
 
@@ -649,12 +678,21 @@
             </div>
           </div>
         </div>
+
+        <!-- Navegación inferior entre indicadores -->
+        <div class="ind-footer-nav">
+          <div></div>
+          <button class="btn btn-secondary" onclick="switchIndicatorTab(2)">
+            <span>Siguiente: Ind. 2 (Certificados EC)</span>
+            <i data-lucide="arrow-right"></i>
+          </button>
+        </div>
       </div>
 
       <!-- ==============================================================
            INDICADOR 2: Cantidad de certificados de conformidad emitidos por año
            ============================================================== -->
-      <div class="ind-card-section" id="ind-sec-2">
+      <div class="ind-card-section hidden" id="ind-sec-2">
         <div class="ind-card-header">
           <div class="ind-header-left">
             <span class="ind-num-badge cyan">INDICADOR 2</span>
@@ -698,12 +736,24 @@
             </div>
           </div>
         </div>
+
+        <!-- Navegación inferior entre indicadores -->
+        <div class="ind-footer-nav">
+          <button class="btn btn-secondary" onclick="switchIndicatorTab(1)">
+            <i data-lucide="arrow-left"></i>
+            <span>Anterior: Ind. 1 (3 Fases)</span>
+          </button>
+          <button class="btn btn-secondary" onclick="switchIndicatorTab(3)">
+            <span>Siguiente: Ind. 3 (Licencias LMU)</span>
+            <i data-lucide="arrow-right"></i>
+          </button>
+        </div>
       </div>
 
       <!-- ==============================================================
            INDICADOR 3: Cantidad de Licencias Metropolitanas Urbanísticas emitidas por año
            ============================================================== -->
-      <div class="ind-card-section" id="ind-sec-3">
+      <div class="ind-card-section hidden" id="ind-sec-3">
         <div class="ind-card-header">
           <div class="ind-header-left">
             <span class="ind-num-badge amber">INDICADOR 3</span>
@@ -741,12 +791,24 @@
             </div>
           </div>
         </div>
+
+        <!-- Navegación inferior entre indicadores -->
+        <div class="ind-footer-nav">
+          <button class="btn btn-secondary" onclick="switchIndicatorTab(2)">
+            <i data-lucide="arrow-left"></i>
+            <span>Anterior: Ind. 2 (Certificados EC)</span>
+          </button>
+          <button class="btn btn-secondary" onclick="switchIndicatorTab(4)">
+            <span>Siguiente: Ind. 4 (Finalización AMC)</span>
+            <i data-lucide="arrow-right"></i>
+          </button>
+        </div>
       </div>
 
       <!-- ==============================================================
            INDICADOR 4: Cantidad de certificados de finalización de proceso constructivo emitidos por año
            ============================================================== -->
-      <div class="ind-card-section" id="ind-sec-4">
+      <div class="ind-card-section hidden" id="ind-sec-4">
         <div class="ind-card-header">
           <div class="ind-header-left">
             <span class="ind-num-badge emerald">INDICADOR 4</span>
@@ -784,12 +846,24 @@
             </div>
           </div>
         </div>
+
+        <!-- Navegación inferior entre indicadores -->
+        <div class="ind-footer-nav">
+          <button class="btn btn-secondary" onclick="switchIndicatorTab(3)">
+            <i data-lucide="arrow-left"></i>
+            <span>Anterior: Ind. 3 (Licencias LMU)</span>
+          </button>
+          <button class="btn btn-secondary" onclick="switchIndicatorTab(5)">
+            <span>Siguiente: Ind. 5 (Cuota por Zonal)</span>
+            <i data-lucide="arrow-right"></i>
+          </button>
+        </div>
       </div>
 
       <!-- ==============================================================
            INDICADOR 5: Porcentaje de participación de cada Administración Zonal respecto del total de licencias emitidas por año
            ============================================================== -->
-      <div class="ind-card-section" id="ind-sec-5">
+      <div class="ind-card-section hidden" id="ind-sec-5">
         <div class="ind-card-header">
           <div class="ind-header-left">
             <span class="ind-num-badge blue">INDICADOR 5</span>
@@ -838,6 +912,18 @@
               </table>
             </div>
           </div>
+        </div>
+
+        <!-- Navegación inferior entre indicadores -->
+        <div class="ind-footer-nav">
+          <button class="btn btn-secondary" onclick="switchIndicatorTab(4)">
+            <i data-lucide="arrow-left"></i>
+            <span>Anterior: Ind. 4 (Finalización AMC)</span>
+          </button>
+          <button class="btn btn-primary" onclick="switchMainView('map')">
+            <i data-lucide="map"></i>
+            <span>Volver al Visor Territorial</span>
+          </button>
         </div>
       </div>
 
@@ -915,10 +1001,10 @@
   </div>
 
   <!-- Standalone Data Bundle (permite abrir index.html directamente sin requerir servidor) -->
-  <script src="public/data/zonas_data.js?v=20261123_v4"></script>
-  <script src="public/data/licencias_data.js?v=20261123_v4"></script>
+  <script src="public/data/zonas_data.js?v=20261123_v5"></script>
+  <script src="public/data/licencias_data.js?v=20261123_v5"></script>
   <!-- App Logic -->
-  <script src="app.js?v=20261123_v4"></script>
+  <script src="app.js?v=20261123_v5"></script>
 </body>
 
 </html>

@@ -2197,7 +2197,103 @@ body {
   margin: 0;
 }
 
-/* Quick Nav Buttons */
+/* Tabs Navigation for Indicators (1 Indicator per Tab) */
+.ind-tabs-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.ind-tab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(15, 23, 42, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  padding: 8px 14px;
+  border-radius: 9px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  text-align: left;
+}
+
+.ind-tab-btn:hover {
+  background: rgba(30, 41, 59, 0.9);
+  border-color: rgba(255, 255, 255, 0.2);
+  transform: translateY(-1px);
+}
+
+.ind-tab-btn.active {
+  background: rgba(30, 41, 59, 0.95);
+  border-color: rgba(56, 189, 248, 0.6);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35), inset 0 0 0 1px rgba(56, 189, 248, 0.35);
+}
+
+.ind-tab-num {
+  width: 26px;
+  height: 26px;
+  border-radius: 7px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+
+.ind-tab-num.purple { background: rgba(168, 85, 247, 0.2); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.35); }
+.ind-tab-num.cyan { background: rgba(6, 182, 212, 0.2); color: #22d3ee; border: 1px solid rgba(6, 182, 212, 0.35); }
+.ind-tab-num.amber { background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.35); }
+.ind-tab-num.emerald { background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.35); }
+.ind-tab-num.blue { background: rgba(59, 130, 246, 0.2); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.35); }
+
+.ind-tab-btn.active .ind-tab-num.purple { box-shadow: 0 0 12px rgba(168, 85, 247, 0.5); }
+.ind-tab-btn.active .ind-tab-num.cyan { box-shadow: 0 0 12px rgba(6, 182, 212, 0.5); }
+.ind-tab-btn.active .ind-tab-num.amber { box-shadow: 0 0 12px rgba(245, 158, 11, 0.5); }
+.ind-tab-btn.active .ind-tab-num.emerald { box-shadow: 0 0 12px rgba(16, 185, 129, 0.5); }
+.ind-tab-btn.active .ind-tab-num.blue { box-shadow: 0 0 12px rgba(59, 130, 246, 0.5); }
+
+.ind-tab-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.ind-tab-title {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #e2e8f0;
+  line-height: 1.2;
+}
+
+.ind-tab-btn.active .ind-tab-title {
+  color: #fff;
+}
+
+.ind-tab-sub {
+  font-size: 0.68rem;
+  color: #94a3b8;
+  font-weight: 500;
+  margin-top: 2px;
+}
+
+.ind-tab-btn.active .ind-tab-sub {
+  color: #38bdf8;
+  font-weight: 600;
+}
+
+/* Footer Nav between Indicator Tabs */
+.ind-footer-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 26px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Quick Nav Buttons (Compatibilidad) */
 .ind-quick-nav {
   display: flex;
   align-items: center;
