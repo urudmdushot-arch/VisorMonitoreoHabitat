@@ -27,7 +27,7 @@
   <script src="https://unpkg.com/lucide@latest"></script>
 
   <!-- Styles -->
-  <link rel="stylesheet" href="index.css?v=20261124_v1">
+  <link rel="stylesheet" href="index.css?v=20261124_v2">
 </head>
 
 <body class="dark-theme">
@@ -560,11 +560,13 @@
     <!-- Indicators Header -->
     <div class="ind-header-bar">
       <div class="ind-header-info">
-        <span class="ind-tag-pill"><i data-lucide="shield-check"></i> Monitoreo y Evaluación de la Normativa Metropolitana</span>
+        <span class="ind-tag-pill"><i data-lucide="shield-check"></i> Monitoreo y Evaluación de la Normativa
+          Metropolitana</span>
         <h2>Tablero de Indicadores: Monitoreo de Licencias</h2>
-        <p>Seguimiento cuantitativo del ciclo de licenciamiento urbano en el Distrito Metropolitano de Quito (Entidades Colaboradoras &rarr; Administraciones Zonales &rarr; AMC)</p>
+        <p>Seguimiento cuantitativo del ciclo de licenciamiento urbano en el Distrito Metropolitano de Quito (Entidades
+          Colaboradoras &rarr; Administraciones Zonales &rarr; AMC)</p>
       </div>
-      
+
       <!-- Pestañas individuales para cada indicador (1 indicador por pestaña) -->
       <div class="ind-tabs-nav" id="ind-tabs-nav">
         <button class="ind-tab-btn active" data-ind="1" onclick="switchIndicatorTab(1)">
@@ -617,7 +619,8 @@
             <span class="ind-num-badge purple">INDICADOR 1</span>
             <div>
               <h3>Porcentaje de proyectos que culminan las 3 fases de licenciamiento</h3>
-              <p class="ind-desc">Mide la proporción de proyectos que iniciaron en Entidades Colaboradoras, obtuvieron Licencia LMU y culminaron con Certificado de Conformidad Final de la AMC.</p>
+              <p class="ind-desc">Mide la proporción de proyectos que iniciaron en Entidades Colaboradoras, obtuvieron
+                Licencia LMU y culminaron con Certificado de Conformidad Final de la AMC.</p>
             </div>
           </div>
           <div class="ind-kpi-highlight purple">
@@ -638,7 +641,14 @@
             </div>
             <div class="ind-table-wrap">
               <table class="ind-mini-table" id="table-ind1-entidad">
-                <thead><tr><th>Entidad</th><th>Iniciados</th><th>3 Fases</th><th>Tasa (%)</th></tr></thead>
+                <thead>
+                  <tr>
+                    <th>Entidad</th>
+                    <th>Iniciados</th>
+                    <th>3 Fases</th>
+                    <th>Tasa (%)</th>
+                  </tr>
+                </thead>
                 <tbody><!-- Injected via JS --></tbody>
               </table>
             </div>
@@ -655,7 +665,14 @@
             </div>
             <div class="ind-table-wrap">
               <table class="ind-mini-table" id="table-ind1-zonal">
-                <thead><tr><th>Admin. Zonal</th><th>Iniciados</th><th>3 Fases</th><th>Tasa (%)</th></tr></thead>
+                <thead>
+                  <tr>
+                    <th>Admin. Zonal</th>
+                    <th>Iniciados</th>
+                    <th>3 Fases</th>
+                    <th>Tasa (%)</th>
+                  </tr>
+                </thead>
                 <tbody><!-- Injected via JS --></tbody>
               </table>
             </div>
@@ -672,7 +689,14 @@
             </div>
             <div class="ind-table-wrap">
               <table class="ind-mini-table" id="table-ind1-anio">
-                <thead><tr><th>Año</th><th>Iniciados</th><th>3 Fases</th><th>Tasa (%)</th></tr></thead>
+                <thead>
+                  <tr>
+                    <th>Año</th>
+                    <th>Iniciados</th>
+                    <th>3 Fases</th>
+                    <th>Tasa (%)</th>
+                  </tr>
+                </thead>
                 <tbody><!-- Injected via JS --></tbody>
               </table>
             </div>
@@ -698,7 +722,8 @@
             <span class="ind-num-badge cyan">INDICADOR 2</span>
             <div>
               <h3>Cantidad de certificados de conformidad emitidos por año</h3>
-              <p class="ind-desc">Volumen de proyectos revisados y aprobados con certificado técnico emitido en la Fase 1 (Entidades Colaboradoras: CAE-P y Desintecsa).</p>
+              <p class="ind-desc">Volumen de proyectos revisados y aprobados con certificado técnico emitido en la Fase
+                1 (Entidades Colaboradoras: CAE-P y Desintecsa).</p>
             </div>
           </div>
           <div class="ind-kpi-highlight cyan">
@@ -713,7 +738,9 @@
             <div class="ind-subcard-title">
               <i data-lucide="bar-chart-2"></i>
               <h4>Evolución por Trimestres (Q1, Q2, Q3, Q4 por Año)</h4>
+              <span id="ind2-trim-filter-pill" class="ind-filter-hint-pill"><i data-lucide="mouse-pointer-click"></i> Clic en una barra para comparar</span>
             </div>
+            <div id="ind2-trim-compare-summary" class="ind-compare-summary-bar hidden"></div>
             <div class="chart-wrapper-ind tall">
               <canvas id="chart-ind2-trimestres"></canvas>
             </div>
@@ -730,7 +757,16 @@
             </div>
             <div class="ind-table-wrap">
               <table class="ind-mini-table" id="table-ind2-entidad">
-                <thead><tr><th>Entidad</th><th>2023</th><th>2024</th><th>2025</th><th>2026</th><th>Total</th></tr></thead>
+                <thead>
+                  <tr>
+                    <th>Entidad</th>
+                    <th>2023</th>
+                    <th>2024</th>
+                    <th>2025</th>
+                    <th>2026</th>
+                    <th>Total</th>
+                  </tr>
+                </thead>
                 <tbody><!-- Injected via JS --></tbody>
               </table>
             </div>
@@ -759,7 +795,8 @@
             <span class="ind-num-badge amber">INDICADOR 3</span>
             <div>
               <h3>Cantidad de Licencias Metropolitanas Urbanísticas emitidas por año</h3>
-              <p class="ind-desc">Total de actos administrativos de autorización urbanística (LMU 10 y LMU 20) otorgados por las Administraciones Zonales del DMQ.</p>
+              <p class="ind-desc">Total de actos administrativos de autorización urbanística (LMU 10 y LMU 20) otorgados
+                por las Administraciones Zonales del DMQ.</p>
             </div>
           </div>
           <div class="ind-kpi-highlight amber">
@@ -814,7 +851,8 @@
             <span class="ind-num-badge emerald">INDICADOR 4</span>
             <div>
               <h3>Cantidad de certificados de finalización de proceso constructivo emitidos por año</h3>
-              <p class="ind-desc">Obras que completaron su edificación y recibieron Certificado de Conformidad Final (CCF) favorable tras la inspección de la AMC.</p>
+              <p class="ind-desc">Obras que completaron su edificación y recibieron Certificado de Conformidad Final
+                (CCF) favorable tras la inspección de la AMC.</p>
             </div>
           </div>
           <div class="ind-kpi-highlight emerald">
@@ -868,8 +906,10 @@
           <div class="ind-header-left">
             <span class="ind-num-badge blue">INDICADOR 5</span>
             <div>
-              <h3>Porcentaje de participación de cada Administración Zonal respecto del total de licencias emitidas por año</h3>
-              <p class="ind-desc">Distribución porcentual de la actividad licenciatoria en el territorio metropolitano y su variación interanual.</p>
+              <h3>Porcentaje de participación de cada Administración Zonal respecto del total de licencias emitidas por
+                año</h3>
+              <p class="ind-desc">Distribución porcentual de la actividad licenciatoria en el territorio metropolitano y
+                su variación interanual.</p>
             </div>
           </div>
           <div class="ind-kpi-highlight blue">
@@ -1001,10 +1041,10 @@
   </div>
 
   <!-- Standalone Data Bundle (permite abrir index.html directamente sin requerir servidor) -->
-  <script src="public/data/zonas_data.js?v=20261124_v1"></script>
-  <script src="public/data/licencias_data.js?v=20261124_v1"></script>
+  <script src="public/data/zonas_data.js?v=20261124_v2"></script>
+  <script src="public/data/licencias_data.js?v=20261124_v2"></script>
   <!-- App Logic -->
-  <script src="app.js?v=20261124_v1"></script>
+  <script src="app.js?v=20261124_v2"></script>
 </body>
 
 </html>

@@ -2424,6 +2424,80 @@ function renderInd2(allProjects, tooltipStyle) {
 
   const ecQuarterKeys = Object.keys(ecQuarterMap).sort();
 
+  // 2.1 Trimestres con realce interactivo interanual al hacer clic
+  let activeQuarter = state.selectedInd2Quarter || null;
+
+  function getBarColors(selectedQ) {
+    return ecQuarterKeys.map(k => {
+      if (!selectedQ) return '#06b6d4';
+      return k.includes(`-${selectedQ}`) ? '#38bdf8' : 'rgba(6, 182, 212, 0.16)';
+    });
+  }
+
+  function getBorderColors(selectedQ) {
+    return ecQuarterKeys.map(k => {
+      if (!selectedQ) return 'transparent';
+      return k.includes(`-${selectedQ}`) ? '#ffffff' : 'transparent';
+    });
+  }
+
+  function getBorderWidths(selectedQ) {
+    return ecQuarterKeys.map(k => {
+      if (!selectedQ) return 0;
+      return k.includes(`-${selectedQ}`) ? 2 : 0;
+    });
+  }
+
+  function updateQuarterComparisonUI(selectedQ) {
+    const summaryEl = document.getElementById('ind2-trim-compare-summary');
+    const pillEl = document.getElementById('ind2-trim-filter-pill');
+    if (!summaryEl) return;
+
+    if (!selectedQ) {
+      summaryEl.classList.add('hidden');
+      summaryEl.innerHTML = '';
+      if (pillEl) {
+        pillEl.innerHTML = `<i data-lucide="mouse-pointer-click"></i> Clic en una barra para comparar`;
+        pillEl.classList.remove('active');
+      }
+    } else {
+      const matching = ecQuarterKeys.filter(k => k.includes(`-${selectedQ}`));
+      const detailsHtml = matching.map(k => {
+        const yr = k.split('-')[0];
+        const val = (ecQuarterMap[k] || 0).toLocaleString('es-EC');
+        return `<span><strong style="color:#e2e8f0;">${yr}:</strong> <span style="color:#38bdf8; font-weight:700;">${val}</span> certs</span>`;
+      }).join(' <span style="color:rgba(255,255,255,0.2);">&bull;</span> ');
+
+      summaryEl.classList.remove('hidden');
+      summaryEl.innerHTML = `
+        <div class="ind-compare-content">
+          <span class="ind-compare-tag cyan"><i data-lucide="bar-chart-2"></i> Comparativa: <strong>${selectedQ}</strong></span>
+          <div class="ind-compare-years">${detailsHtml}</div>
+          <button class="ind-reset-pill-btn" onclick="resetInd2QuarterFilter()" title="Quitar filtro y ver todos los trimestres">
+            <i data-lucide="x"></i> Restablecer
+          </button>
+        </div>
+      `;
+      if (pillEl) {
+        pillEl.innerHTML = `<i data-lucide="check"></i> Comparando <strong>${selectedQ}</strong> interanual`;
+        pillEl.classList.add('active');
+      }
+    }
+    if (window.lucide) lucide.createIcons();
+  }
+
+  window.resetInd2QuarterFilter = function () {
+    state.selectedInd2Quarter = null;
+    activeQuarter = null;
+    if (state.indCharts.ind2Trim) {
+      state.indCharts.ind2Trim.data.datasets[0].backgroundColor = getBarColors(null);
+      state.indCharts.ind2Trim.data.datasets[0].borderColor = getBorderColors(null);
+      state.indCharts.ind2Trim.data.datasets[0].borderWidth = getBorderWidths(null);
+      state.indCharts.ind2Trim.update();
+    }
+    updateQuarterComparisonUI(null);
+  };
+
   const ctxInd2Trim = document.getElementById('chart-ind2-trimestres')?.getContext('2d');
   if (ctxInd2Trim) {
     if (state.indCharts.ind2Trim) state.indCharts.ind2Trim.destroy();
@@ -2434,7 +2508,9 @@ function renderInd2(allProjects, tooltipStyle) {
         datasets: [{
           label: 'Certificados Emitidos',
           data: ecQuarterKeys.map(k => ecQuarterMap[k]),
-          backgroundColor: '#06b6d4',
+          backgroundColor: getBarColors(activeQuarter),
+          borderColor: getBorderColors(activeQuarter),
+          borderWidth: getBorderWidths(activeQuarter),
           hoverBackgroundColor: '#22d3ee',
           borderRadius: 4
         }]
@@ -2442,9 +2518,47 @@ function renderInd2(allProjects, tooltipStyle) {
       options: {
         responsive: true,
         maintainAspectRatio: false,
+        onClick: (evt, activeEls) => {
+          if (!activeEls || activeEls.length === 0) {
+            window.resetInd2QuarterFilter();
+            return;
+          }
+          const idx = activeEls[0].index;
+          const label = ecQuarterKeys[idx];
+          const matchQ = label.match(/Q[1-4]/);
+          const clickedQ = matchQ ? matchQ[0] : null;
+
+          if (!clickedQ) return;
+
+          if (activeQuarter === clickedQ) {
+            activeQuarter = null;
+            state.selectedInd2Quarter = null;
+          } else {
+            activeQuarter = clickedQ;
+            state.selectedInd2Quarter = clickedQ;
+          }
+
+          if (state.indCharts.ind2Trim) {
+            state.indCharts.ind2Trim.data.datasets[0].backgroundColor = getBarColors(activeQuarter);
+            state.indCharts.ind2Trim.data.datasets[0].borderColor = getBorderColors(activeQuarter);
+            state.indCharts.ind2Trim.data.datasets[0].borderWidth = getBorderWidths(activeQuarter);
+            state.indCharts.ind2Trim.update();
+          }
+          updateQuarterComparisonUI(activeQuarter);
+        },
         plugins: {
           legend: { display: false },
-          tooltip: tooltipStyle
+          tooltip: {
+            ...tooltipStyle,
+            callbacks: {
+              afterLabel: (ctx) => {
+                const label = ecQuarterKeys[ctx.dataIndex];
+                const matchQ = label.match(/Q[1-4]/);
+                const q = matchQ ? matchQ[0] : '';
+                return `Trimestre: ${q} (Clic para comparar ${q} interanual)`;
+              }
+            }
+          }
         },
         scales: {
           x: { grid: { display: false } },
@@ -2452,6 +2566,8 @@ function renderInd2(allProjects, tooltipStyle) {
         }
       }
     });
+
+    updateQuarterComparisonUI(activeQuarter);
   }
 
   // 2.2 Desagregación por Entidad Colaboradora por Año
@@ -2878,11 +2994,11 @@ function renderInd5(allProjects, tooltipStyle) {
             <strong>${z}</strong>
           </td>
           ${years5.map(y => {
-            const tot = yearTotals[y];
-            const cnt = zonalYearCounts[`${z}-${y}`] || 0;
-            const pct = tot > 0 ? (cnt * 100 / tot).toFixed(1) : '0.0';
-            return `<td>${pct}% <small style="color:#64748b;">(${cnt})</small></td>`;
-          }).join('')}
+        const tot = yearTotals[y];
+        const cnt = zonalYearCounts[`${z}-${y}`] || 0;
+        const pct = tot > 0 ? (cnt * 100 / tot).toFixed(1) : '0.0';
+        return `<td>${pct}% <small style="color:#64748b;">(${cnt})</small></td>`;
+      }).join('')}
           <td><strong style="color:${zColor};">${totalZ.toLocaleString('es-EC')}</strong></td>
         </tr>
       `;
