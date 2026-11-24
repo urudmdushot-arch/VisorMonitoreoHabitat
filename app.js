@@ -2428,20 +2428,15 @@ function renderInd2(allProjects, tooltipStyle) {
   if (ctxInd2Trim) {
     if (state.indCharts.ind2Trim) state.indCharts.ind2Trim.destroy();
     state.indCharts.ind2Trim = new Chart(ctxInd2Trim, {
-      type: 'line',
+      type: 'bar',
       data: {
         labels: ecQuarterKeys,
         datasets: [{
           label: 'Certificados Emitidos',
           data: ecQuarterKeys.map(k => ecQuarterMap[k]),
-          borderColor: '#06b6d4',
-          backgroundColor: 'rgba(6, 182, 212, 0.12)',
-          fill: true,
-          tension: 0.35,
-          pointBackgroundColor: '#06b6d4',
-          pointRadius: 4,
-          pointHoverRadius: 6,
-          borderWidth: 2
+          backgroundColor: '#06b6d4',
+          hoverBackgroundColor: '#22d3ee',
+          borderRadius: 4
         }]
       },
       options: {
