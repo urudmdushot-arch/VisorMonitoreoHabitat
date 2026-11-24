@@ -2414,8 +2414,13 @@ function renderInd2(allProjects, tooltipStyle) {
   allEcCerts.forEach(c => {
     const f = c.fecha_emision;
     if (f && f.length >= 7) {
-      const y = f.substring(0, 4);
-      const m = parseInt(f.substring(5, 7));
+      let y = parseInt(f.substring(0, 4));
+      let m = parseInt(f.substring(5, 7));
+      // Salvaguarda: fecha de corte oficial a mayo 2026 (2026-Q2)
+      if (y === 2026 && m > 5) {
+        const d = parseInt(f.substring(8, 10)) || 0;
+        m = (d > 0 && d <= 5) ? d : 5;
+      }
       const q = `Q${Math.ceil(m / 3)}`;
       const key = `${y}-${q}`;
       ecQuarterMap[key] = (ecQuarterMap[key] || 0) + 1;
@@ -2673,8 +2678,13 @@ function renderInd3(allProjects, tooltipStyle) {
   allAzLics.forEach(l => {
     const f = l.fecha_emision;
     if (f && f.length >= 7) {
-      const y = f.substring(0, 4);
-      const m = parseInt(f.substring(5, 7));
+      let y = parseInt(f.substring(0, 4));
+      let m = parseInt(f.substring(5, 7));
+      // Salvaguarda: fecha de corte oficial a mayo 2026 (2026-Q2)
+      if (y === 2026 && m > 5) {
+        const d = parseInt(f.substring(8, 10)) || 0;
+        m = (d > 0 && d <= 5) ? d : 5;
+      }
       const q = `Q${Math.ceil(m / 3)}`;
       const key = `${y}-${q}`;
       azQuarterMap[key] = (azQuarterMap[key] || 0) + 1;
